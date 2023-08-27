@@ -21,7 +21,7 @@ BASE_ADDRESS_DEFAULT = 8474880
 BASE_ADDRESS_REMAPPED_SCENE_MEMORY = 12669184
 
 FIRST_CUSTOM_FLIPEFFECT = 47
-LAST_CUSTOM_FLIPEFFECT = 146
+LAST_CUSTOM_FLIPEFFECT = 512
 
 if USE_REMAP_REMORY:
 	BASE_ADDRESS = BASE_ADDRESS_REMAPPED_SCENE_MEMORY
@@ -116,17 +116,21 @@ def read_arg(arg, type):
 			raise NameError("Unknown type")
 		
 def create_flipeffect_table_entry_for_opcode(opcode, first_arg, second_arg):
-	first_arg_typed = read_arg(first_arg, opcode["first_arg_type"])
-	second_arg_typed = read_arg(second_arg, opcode["second_arg_type"])
+	if opcode["reverse_args"]:
+		first_arg_typed = read_arg(first_arg, opcode["second_arg_type"])
+		second_arg_typed = read_arg(second_arg, opcode["first_arg_type"])
+	else:
+		first_arg_typed = read_arg(first_arg, opcode["first_arg_type"])
+		second_arg_typed = read_arg(second_arg, opcode["second_arg_type"])
 
 	if opcode["reverse_args"]:
-		final_opcode = [opcode["function_name"], (first_arg_typed), (second_arg_typed)]
-	else:
 		final_opcode = [opcode["function_name"], (second_arg_typed), (first_arg_typed)]
+	else:
+		final_opcode = [opcode["function_name"], (first_arg_typed), (second_arg_typed)]
 
 	return final_opcode
 
-def get_split_byte_arrays_with_args(my_bytes, first_arg_type, second_arg_type, first_arg_pos, second_arg_pos, first_arg_is_local_offset, second_arg_is_local_offset):
+def get_split_byte_arrays_with_args(my_bytes, first_arg_type, second_arg_type, first_arg_pos, second_arg_pos, first_arg_is_local_offset, second_arg_is_local_offset, reverse_args):
 	position_arr = []
 	sizes_arr = []
 
@@ -147,6 +151,10 @@ def get_split_byte_arrays_with_args(my_bytes, first_arg_type, second_arg_type, f
 
 		position_arr.append(second_arg_pos)
 		sizes_arr.append(second_arg_variant_size)
+
+	if reverse_args:
+		position_arr.reverse()
+		sizes_arr.reverse()
 
 	final_split_result = []
 	if len(position_arr) > 0:
@@ -201,12 +209,12 @@ def load_syntax_file():
 				if len(tokens) > 5:
 					second_arg_type = tokens[5]
 
-			reverse_args = True if second_arg_pos < first_arg_pos else False
+			reverse_args = True if (second_arg_pos < first_arg_pos and second_arg_type != None) else False
 
 			assembly_bytes = bytes.fromhex(assembly_string)
 			total_length = len(assembly_bytes)
 			
-			split_byte_arrays = get_split_byte_arrays_with_args(assembly_bytes, first_arg_type, second_arg_type, first_arg_pos, second_arg_pos, first_arg_is_local_offset, second_arg_is_local_offset)
+			split_byte_arrays = get_split_byte_arrays_with_args(assembly_bytes, first_arg_type, second_arg_type, first_arg_pos, second_arg_pos, first_arg_is_local_offset, second_arg_is_local_offset, reverse_args)
 
 			opcodes.append({
 				"byte_arrays":split_byte_arrays,
@@ -344,9 +352,11 @@ def extract_racetimer_events_from_exe(f, opcode_list):
 				if (command_result["was_nop"]):
 					nop_count += 1
 				else:
-					nop_count = 0
 					if (command_result["new_command"]):
 						current_command_list.append(command_result["new_command"])
+					else:
+						current_command_list.append({"new_command":["UNKNOWN COMMAND"], "was_nop":False})
+					nop_count = 0
 			print(racetrack_events)
 
 
@@ -398,8 +408,11 @@ def extract_flipeffect_table_from_exe(f, opcode_list):
 				if (command_result["was_nop"]):
 					nop_count += 1
 				else:
+					nop_count = 0
 					if (command_result["new_command"]):
 						flipeffect_command_table.append(command_result["new_command"])
+					else:
+						flipeffect_command_table.append({"new_command":["UNKNOWN COMMAND"], "was_nop":False})
 					nop_count = 0
 
 		flipeffect_table.append(flipeffect_command_table)
@@ -431,4 +444,4 @@ def read_exe_file(exe_file_path):
 		extract_flipeffect_table_from_exe(f, opcodes)
 		extract_racetimer_events_from_exe(f, opcodes)
 
-read_exe_file("tomb4.exe")
+read_exe_file("dracula.exe")
