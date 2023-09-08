@@ -40,7 +40,7 @@ def extract_font_data_from_exe(f):
 			y_offset = font_table_entry["y_offset"]
 			top_shade = font_table_entry["top_shade"]
 			bottom_shade = font_table_entry["bottom_shade"]
-			wf.write("{" + f"{u}F,{v}F,{w},{h},{y_offset},{top_shade},{bottom_shade}" + "},\n")
+			wf.write("{" + f"\"u\":{u},\"v\":{v},\"w\":{w},\"h\":{h},\"y_offset\":{y_offset},\"top_shade\":{top_shade},\"bottom_shade\":{bottom_shade}" + "},\n")
 
 	f.seek(WIDTH_ADDRESS)
 	width = round(struct.unpack('<f', f.read(4))[0], ROUNDING_POINT)
