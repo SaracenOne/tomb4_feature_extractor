@@ -22,13 +22,18 @@ BASE_ADDRESS_REMAPPED_SCENE_MEMORY = 12669184
 
 FIRST_CUSTOM_FLIPEFFECT = 47
 LAST_CUSTOM_FLIPEFFECT = 512
-
-if USE_REMAP_REMORY:
-	BASE_ADDRESS = BASE_ADDRESS_REMAPPED_SCENE_MEMORY
-	ONESHOT_OPCODE = ONESHOT_OPCODE_REMAPED_SCENE_MEMORY
-else: 
-	BASE_ADDRESS = BASE_ADDRESS_DEFAULT
-	ONESHOT_OPCODE = ONESHOT_OPCODE_DEFAULT
+	
+def get_base_address(using_remapped_memory):
+	if using_remapped_memory:
+		return BASE_ADDRESS_REMAPPED_SCENE_MEMORY
+	else:
+		return BASE_ADDRESS_DEFAULT
+	
+def get_oneshot_opcode(using_remapped_memory):
+	if using_remapped_memory:
+		return ONESHOT_OPCODE_REMAPED_SCENE_MEMORY
+	else:
+		return ONESHOT_OPCODE_DEFAULT
 
 # TODO: Re-examine this function!
 def split_byte_array(byte_array: bytearray, positions: list, sizes: list) -> list:
@@ -181,10 +186,10 @@ def find_all_addresses(string):
 	return address_array
 
 
-def load_syntax_file():
+def load_syntax_file(syntax_file_name):
 	opcodes = []
 
-	with open('syntax.fln', 'r') as file:
+	with open(syntax_file_name, 'r') as file:
 		for line in file:
 			if line.startswith(';') or line.startswith('!') or not line.strip():
 				continue
@@ -316,7 +321,7 @@ def scan_for_optimal_command(f, opcode_list, command_position):
 		return {"new_command":None, "was_nop":False}
 
 
-def extract_racetimer_events_from_exe(f, opcode_list):
+def extract_racetimer_events_from_exe(f, opcode_list, is_using_remapped_memory):
 	print("Extracting racetimer events...")
 
 	f.seek(RACETIMER_EVENT_DATA_ADDRESS)
@@ -360,7 +365,7 @@ def extract_racetimer_events_from_exe(f, opcode_list):
 			print(racetrack_events)
 
 
-def extract_flipeffect_table_from_exe(f, opcode_list):
+def extract_flipeffect_table_from_exe(f, opcode_list, is_using_remapped_memory):
 	print("Extracting flipeffects table...")
 
 	offset_table = []
@@ -371,7 +376,7 @@ def extract_flipeffect_table_from_exe(f, opcode_list):
 		if (address == 0):
 			offset_table.append(-1)
 		else:
-			offset_table.append(address - BASE_ADDRESS)
+			offset_table.append(address - get_base_address(is_using_remapped_memory))
 			
 	# Add an extra entry for testing
 	offset_table.append(-1)
@@ -428,20 +433,18 @@ def extract_flipeffect_table_from_exe(f, opcode_list):
 		else:
 			print("Could not find any commands for flipeffect: " + str(i + FIRST_CUSTOM_FLIPEFFECT))
 				
-def read_exe_file(exe_file_path):
-	opcodes = load_syntax_file()
+def read_exe_file(exe_file_path, syntax_file_name, is_using_remapped_memory):
+	opcodes = load_syntax_file(syntax_file_name)
 	
 	opcodes.append({
-		"byte_arrays":ONESHOT_OPCODE,
+		"byte_arrays":get_oneshot_opcode(is_using_remapped_memory),
 		"function_name":"ONESHOT",
 		"reverse_args":False,
 		"address_table":[],
-		"total_length":sum(len(b) for b in ONESHOT_OPCODE),
+		"total_length":sum(len(b) for b in get_oneshot_opcode(is_using_remapped_memory)),
 		"first_arg_type":"LONG",
 		"second_arg_type":"UNSIGNEDINTEGER"})
 
 	with open(exe_file_path, 'rb') as f:
-		extract_flipeffect_table_from_exe(f, opcodes)
-		extract_racetimer_events_from_exe(f, opcodes)
-
-read_exe_file("dracula.exe")
+		extract_flipeffect_table_from_exe(f, opcodes, is_using_remapped_memory)
+		extract_racetimer_events_from_exe(f, opcodes, is_using_remapped_memory)

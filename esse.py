@@ -1,3 +1,4 @@
+import os
 import struct
 
 def read_data(f, d, key_name, base_offset, offset, max_block_size, type, string_width, default_value):
@@ -60,6 +61,10 @@ def read_data(f, d, key_name, base_offset, offset, max_block_size, type, string_
     return d
 
 def read_binary_file(file_path):
+    if not os.path.exists(file_path):
+        print(f"The file {file_path} does not exist.")
+        return None
+
     with open(file_path, 'rb') as f:
         level_count = struct.unpack('B', f.read(1))[0]
         f.seek(1)
@@ -326,8 +331,3 @@ def read_binary_file(file_path):
             level_array.append(data)
 
     return level_array
-
-array = read_binary_file("script2.dat")
-for entry in array:
-    for key in entry:
-        print(entry[key])

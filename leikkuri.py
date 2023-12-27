@@ -1,7 +1,5 @@
 import struct
-import json
 import numpy as np
-
 
 HEIGHT_ADDRESS = 0x000A728C
 WIDTH_ADDRESS = 0x000A7290
@@ -54,15 +52,13 @@ def extract_font_data_from_exe(f):
 	f.seek(COMPRESSED_TEXT_FACTOR_ADDRESS)
 	compressed_text_factor = round(struct.unpack('<f', f.read(4))[0], ROUNDING_POINT)
 
-	with open("font_info.txt", "w") as wf:
-		wf.write(f"width: {width}F\n")
-		wf.write(f"height: {height}F\n")
-		wf.write(f"vertical_spacing: {vertical_spacing}F\n")
-		wf.write(f"compressed_text_factor: {compressed_text_factor}F\n")
+	#with open("font_info.txt", "w") as wf:
+	#	wf.write(f"width: {width}F\n")
+	#	wf.write(f"height: {height}F\n")
+	#	wf.write(f"vertical_spacing: {vertical_spacing}F\n")
+	#	wf.write(f"compressed_text_factor: {compressed_text_factor}F\n")
 
 
 def read_exe_file(exe_file_path):
 	with open(exe_file_path, 'rb') as f:
 		extract_font_data_from_exe(f)
-
-read_exe_file("tomb4.exe")
