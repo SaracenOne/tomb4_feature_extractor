@@ -52,6 +52,8 @@ def extract_font_data_from_exe(f):
 	f.seek(COMPRESSED_TEXT_FACTOR_ADDRESS)
 	compressed_text_factor = round(struct.unpack('<f', f.read(4))[0], ROUNDING_POINT)
 
+	return {"custom_glyph_scale_width":int(width), "custom_glyph_scale_height":int(height), "custom_vertical_spacing":vertical_spacing, "custom_compressed_text_factor":compressed_text_factor, "custom_font_table":font_table}
+
 	#with open("font_info.txt", "w") as wf:
 	#	wf.write(f"width: {width}F\n")
 	#	wf.write(f"height: {height}F\n")
@@ -61,4 +63,4 @@ def extract_font_data_from_exe(f):
 
 def read_exe_file(exe_file_path):
 	with open(exe_file_path, 'rb') as f:
-		extract_font_data_from_exe(f)
+		return extract_font_data_from_exe(f)

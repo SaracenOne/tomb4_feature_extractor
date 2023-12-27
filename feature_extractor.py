@@ -2,6 +2,7 @@ import os
 import argparse
 import hashlib
 import pefile
+import json
 
 import binary_funcs
 import trep
@@ -61,6 +62,8 @@ def detect_next_generation_dll(path):
 	
 	version = get_pe_file_version(ng_dll_path)
 
+	return version
+
 def detect_tomb4_game(path=None, exe_file=None):
 	while path is None or path == "":
 		path = input("Please enter the path to the directory: ")
@@ -90,23 +93,21 @@ def detect_tomb4_game(path=None, exe_file=None):
 	os.system(f'"{exe_path}"')
 	
 	exe_hash = get_file_hash(exe_path)
-	file_size = os.path.getsize(exe_path)
+	exe_file_size = os.path.getsize(exe_path)
 
-	print(f"The hash of the file {exe_path} is {exe_hash} and is {file_size} bytes.")
+	print(f"The hash of the file {exe_path} is {exe_hash} and is {exe_file_size} bytes.")
 
 	is_extended_exe_size = False
 
-	if file_size == EXE_TREP_EXTENDED_SIZE:
+	if exe_file_size == EXE_TREP_EXTENDED_SIZE:
 		is_extended_exe_size = True
 		print("File size {file_size} matches TREP extended binary size.")
 
 	if exe_hash in trle_vanilla_hashes:
 		print("The engine was detected as an unextended vanilla build.")
-		return
 
 	if exe_hash in trle_extended_hashes:
 		print("The engine was detected as an extended vanilla build.")
-		return
 
 	# Attempt to determine if this binary is using memory remapping.
 	is_using_remapped_memory = False
@@ -115,13 +116,13 @@ def detect_tomb4_game(path=None, exe_file=None):
 			is_using_remapped_memory = True
 
 	print("Searching for NextGeneration dll...")
-	detect_next_generation_dll(path)
+	trng_version = detect_next_generation_dll(path)
 
 	print("Scanning for TREP modifications in exe file...")
 	trep.read_exe_file(exe_path, is_extended_exe_size)
 
 	print("Scanning for Leikkuri modifications in exe file...")
-	leikkuri.read_exe_file(exe_path)
+	font_info = leikkuri.read_exe_file(exe_path)
 
 	if is_extended_exe_size:
 		print("Scanning for FURR modifications in exe file...")
@@ -141,6 +142,46 @@ def detect_tomb4_game(path=None, exe_file=None):
 			print(f"eSSe data for level {str(level_id)}: {str(item)}")
 	else:
 		print(f"No eSSe script file found.")
+
+	# Generate Mod Config
+
+	output_mod_config = {}
+
+	global_config = {}
+	global_config["trng_version_major"] = 0
+	global_config["trng_version_minor"] = 0
+	global_config["trng_version_maintainence"] = 0
+	global_config["trng_version_build"] = 0
+
+	global_config["trng_flipeffects_enabled"] = False
+	global_config["trng_rollingball_extended_ocb"] = False
+	global_config["trng_statics_extended_ocb"] = False
+	global_config["trng_pushable_extended_ocb"] = False
+
+	if exe_file_size != EXE_DEFAULT_SIZE and exe_file_size != EXE_TREP_EXTENDED_SIZE:
+		if trng_version is list and len(trng_version) == 4:
+			global_config["trng_version_major"] = trng_version[0]
+			global_config["trng_version_minor"] = trng_version[1]
+			global_config["trng_version_maintainence"] = trng_version[2]
+			global_config["trng_version_build"] = trng_version[3]
+
+			global_config["trng_flipeffects_enabled"] = True
+			global_config["trng_rollingball_extended_ocb"] = True
+			global_config["trng_statics_extended_ocb"] = True
+			global_config["trng_pushable_extended_ocb"] = True
+
+	global_level_info = {}
+	global_level_info["font_info"] = font_info
+
+	#
+	output_mod_config["global_config"] = global_config
+	output_mod_config["global_level_info"] = global_level_info
+
+	json_data = json.dumps(output_mod_config, indent=4, separators=(',', ':'))
+
+	# Write JSON string to a file
+	with open(os.path.join(path, "game_mod_config.json"), 'w') as file:
+		file.write(json_data)
 
 
 if __name__ == "__main__":
