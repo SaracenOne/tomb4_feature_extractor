@@ -1,6 +1,7 @@
 import os
 import argparse
 import hashlib
+import re
 import pefile
 import json
 
@@ -18,6 +19,13 @@ trle_vanilla_hashes = ["dd351288b437ae4638db9aecca714df4"]
 
 # Known a list of known hashes for extended TRLE exe files but which are otherwise untampered (maybe?).
 trle_extended_hashes = ["e2fb8ac766ce0c2bef0e30b20b4e5b38", "0b78a6ecec28ea2725bb163c86b6b747"]
+
+def extract_integer(s):
+    numbers = re.findall(r'\d+', s)
+    return int(''.join(numbers))
+
+def contains_plus(s):
+    return '+' in s
 
 def get_file_hash(exe_path):
     # Use MD5 hash algorithm
@@ -90,8 +98,6 @@ def detect_tomb4_game(path=None, exe_file=None):
 		print(f"The file {exe_path} does not exist.")
 		return
 
-	os.system(f'"{exe_path}"')
-	
 	exe_hash = get_file_hash(exe_path)
 	exe_file_size = os.path.getsize(exe_path)
 
@@ -130,12 +136,6 @@ def detect_tomb4_game(path=None, exe_file=None):
 	print("Scanning for Leikkuri modifications in exe file...")
 	font_info = leikkuri.read_exe_file(exe_path)
 
-	if is_extended_exe_size:
-		print("Scanning for FURR modifications in exe file...")
-		furr_syntax.read_exe_file(exe_path, "syntax.fln", is_using_remapped_memory)
-	else:
-		print("Unknown EXE file size, skipping FURR extraction in exe file...")
-
 	esse_path = os.path.join(path, "script2.dat")
 	esse_result = []
 	print(f"Searching for {esse_path}...")
@@ -147,35 +147,39 @@ def detect_tomb4_game(path=None, exe_file=None):
 		level_id = 0
 		for item in esse_result:
 			print(f"eSSe data for level {str(level_id)}: {str(item)}")
+			level_id += 1
 	else:
 		print(f"No eSSe script file found.")
+
+	if is_extended_exe_size:
+		print("Scanning for FURR modifications in exe file...")
+		furr_syntax.read_exe_file(exe_path, "syntax.fln", is_using_remapped_memory)
+	else:
+		print("Unknown EXE file size, skipping FURR extraction in exe file...")
 
 	# Generate Mod Config
 
 	output_mod_config = {}
 
-	global_config = {}
-	global_config["trng_version_major"] = 0
-	global_config["trng_version_minor"] = 0
-	global_config["trng_version_maintainence"] = 0
-	global_config["trng_version_build"] = 0
-
-	global_config["trng_flipeffects_enabled"] = False
-	global_config["trng_rollingball_extended_ocb"] = False
-	global_config["trng_statics_extended_ocb"] = False
-	global_config["trng_pushable_extended_ocb"] = False
+	global_info = {}
+	global_info["trng_version_major"] = 0
+	global_info["trng_version_minor"] = 0
+	global_info["trng_version_maintainence"] = 0
+	global_info["trng_version_build"] = 0
+	global_info["trng_version_is_plus"] = 0
 
 	if exe_file_size != EXE_DEFAULT_SIZE and exe_file_size != EXE_TREP_EXTENDED_SIZE:
-		if trng_version is list and len(trng_version) == 4:
-			global_config["trng_version_major"] = trng_version[0]
-			global_config["trng_version_minor"] = trng_version[1]
-			global_config["trng_version_maintainence"] = trng_version[2]
-			global_config["trng_version_build"] = trng_version[3]
-
-			global_config["trng_flipeffects_enabled"] = True
-			global_config["trng_rollingball_extended_ocb"] = True
-			global_config["trng_statics_extended_ocb"] = True
-			global_config["trng_pushable_extended_ocb"] = True
+		if trng_version and len(trng_version) == 4:
+			global_info["trng_version_major"] = int(trng_version[0])
+			global_info["trng_version_minor"] = int(trng_version[1])
+			global_info["trng_version_maintainence"] = int(trng_version[2])
+			global_info["trng_version_build"] = int(extract_integer(trng_version[3]))
+			global_info["trng_version_is_plus"] = contains_plus(trng_version[3])
+	else:
+		global_info["trng_flipeffects_enabled"] = False
+		global_info["trng_rollingball_extended_ocb"] = False
+		global_info["trng_statics_extended_ocb"] = False
+		global_info["trng_pushable_extended_ocb"] = False
 
 	global_level_info = {}
 
@@ -187,7 +191,7 @@ def detect_tomb4_game(path=None, exe_file=None):
 	global_level_info["font_info"] = font_info
 
 	#
-	output_mod_config["global_config"] = global_config
+	output_mod_config["global_info"] = global_info
 	output_mod_config["global_level_info"] = global_level_info
 	output_mod_config["levels"] = esse_result
 
