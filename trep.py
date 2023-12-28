@@ -292,6 +292,12 @@ def read_extended_info(f, is_extended_exe_size, trep_data):
 			enable_rollingball_smash_and_kill = True
 			print(f"Enable Rollingball Smash and Kill: {str(enable_rollingball_smash_and_kill)}")
 
+		# Enable Ricochet SFX
+		if not binary_funcs.is_nop_at_range(f, 0x000EE43F, 0x000EE9DE):
+			trep_data["misc_info"]["enable_standing_pushables"] = True
+		else:
+			trep_data["misc_info"]["enable_standing_pushables"] = False
+
 	return trep_data
 
     
