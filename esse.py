@@ -331,12 +331,13 @@ def read_binary_file(file_path, trep_data):
 
             level_info = {}
 
-            environment_info = {}
-            
-            environment_info["fog_start_range"] = int(data["DF"])
-            environment_info["fog_end_range"] = int(data["DD"])
+            if trep_data["meta_info"]["esse_scripted_params"] == True:
+                environment_info = {}
+                
+                environment_info["fog_start_range"] = int(data["DF"])
+                environment_info["fog_end_range"] = int(data["DD"])
 
-            level_info["environment_info"] = environment_info
+                level_info["environment_info"] = environment_info
 
             level_array.append(level_info)
 

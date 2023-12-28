@@ -231,7 +231,19 @@ def read_environment_info(f):
 def read_extended_info(f, is_extended_exe_size, trep_data):
 	print("Scanning Extended Info...")
 	
+	trep_data["meta_info"]["esse_scripted_params"] = False
+	trep_data["meta_info"]["esse_multiple_mirrors"] = False
+	
 	if is_extended_exe_size:
+		# eSSe file loading enable
+		if not binary_funcs.is_nop_at_range(f, 0x000EFBA0, 0x000EFBC8) or \
+		not binary_funcs.is_nop_at_range(f, 0x000EFFE0, 0x000F0002):
+			print(f"eSSe file loading enabled!")
+			if not binary_funcs.is_nop_at_range(f, 0x000F0010, 0x000F0A3D):
+				trep_data["meta_info"]["esse_scripted_params"] = True
+			if not binary_funcs.is_nop_at_range(f, 0x000F5E10, 0x000F6113):
+				trep_data["meta_info"]["esse_multiple_mirrors"] = True
+
 		# Show HP bar in Inventory.
 		show_hp_bar_in_inventory = False
 		if not binary_funcs.is_nop_at_range(f, 0x000EFD90, 0x000EFDCB):
@@ -285,6 +297,9 @@ def read_extended_info(f, is_extended_exe_size, trep_data):
     
 def read_exe_file(exe_file_path, is_extended_exe_size):
 	trep_data = {}
+
+	# Meta info is not serialized
+	trep_data["meta_info"] = {}
 
 	with open(exe_file_path, 'rb') as f:
 		print("---")
