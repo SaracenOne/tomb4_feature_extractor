@@ -119,7 +119,13 @@ def detect_tomb4_game(path=None, exe_file=None):
 	trng_version = detect_next_generation_dll(path)
 
 	print("Scanning for TREP modifications in exe file...")
-	trep.read_exe_file(exe_path, is_extended_exe_size)
+	trep_data = trep.read_exe_file(exe_path, is_extended_exe_size)
+
+	audio_info = trep_data["audio_info"]
+	bar_info = trep_data["bar_info"]
+	environment_info = trep_data["environment_info"]
+	misc_info = trep_data["misc_info"]
+	stat_info = trep_data["stat_info"]
 
 	print("Scanning for Leikkuri modifications in exe file...")
 	font_info = leikkuri.read_exe_file(exe_path)
@@ -131,10 +137,11 @@ def detect_tomb4_game(path=None, exe_file=None):
 		print("Unknown EXE file size, skipping FURR extraction in exe file...")
 
 	esse_path = os.path.join(path, "script2.dat")
+	esse_result = []
 	print(f"Searching for {esse_path}...")
 	if os.path.exists(esse_path):
 		print(f"Found eSSe script file at {esse_path}.")
-		esse_result = esse.read_binary_file(esse_path)
+		esse_result = esse.read_binary_file(esse_path, trep_data)
 
 		print("eSSe script file content:")
 		level_id = 0
@@ -171,11 +178,18 @@ def detect_tomb4_game(path=None, exe_file=None):
 			global_config["trng_pushable_extended_ocb"] = True
 
 	global_level_info = {}
+
+	global_level_info["audio_info"] = audio_info
+	global_level_info["bar_info"] = bar_info
+	global_level_info["environment_info"] = environment_info
+	global_level_info["misc_info"] = misc_info
+	global_level_info["stat_info"] = stat_info
 	global_level_info["font_info"] = font_info
 
 	#
 	output_mod_config["global_config"] = global_config
 	output_mod_config["global_level_info"] = global_level_info
+	output_mod_config["levels"] = esse_result
 
 	json_data = json.dumps(output_mod_config, indent=4, separators=(',', ':'))
 

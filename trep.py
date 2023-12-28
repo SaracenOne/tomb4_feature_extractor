@@ -75,6 +75,8 @@ def read_enemy_info(f):
 def read_misc_info(f):
 	print("Scanning Misc Info...")
 
+	misc_info = {}
+
 	# Remove Look Transparency
 	look_transparency_byte = binary_funcs.get_u8_at_address(f, 0x0001d0c0)
 	remove_look_transparency = True if look_transparency_byte == 0xeb else False
@@ -98,145 +100,135 @@ def read_misc_info(f):
 	posion_dart_posion_value = binary_funcs.get_s16_at_address(f, 0x00014048)
 	print(f"Poison Dart Poison Value: {posion_dart_posion_value}.")
 
-	# Max Secrets
-	max_secrets_string = binary_funcs.get_fixed_string_at(f, 0x000B1785, 2)
-	print(f"Max Secrets: {max_secrets_string}.")
-
 	# Fix Holsters
 	fix_holsters = False
 	if not binary_funcs.is_nop_at_range(f, 0x0002B7C1, 0x0002B7CB) and not binary_funcs.is_nop_at_range(f, 0x0002B845, 0x0002B84F):
 		fix_holsters = True
 		print(f"Fix Holsters: {str(fix_holsters)}.")
 
+	return misc_info
+
+def read_stat_info(f):
+	print("Scanning Stat Info Info...")
+
+	stat_info = {}
+
+	stat_info["secret_count"] = int(binary_funcs.get_fixed_string_at(f, 0x000B1785, 2))
+
+	return stat_info
+
 def read_bar_info(f):
 	print("Scanning Bar Info...")
 
+	bar_info = {}
+
 	# Health Bar
-	health_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5B0)
-	print(f"Health Bar Main Color: {str(health_bar_main_color)}.")
- 
-	health_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5bA)
-	print(f"Health Bar Fade Color: {str(health_bar_fade_color)}.")
+	bar_info["health_bar_main_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B5B0)
+	bar_info["health_bar_fade_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B5bA)
+	bar_info["health_bar_poison_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B5AB)
 
-	health_bar_posion_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5AB)
-	print(f"Health Bar Poison Color: {str(health_bar_posion_color)}.")
+	bar_info["health_bar_poison_color"]["r"] = min(bar_info["health_bar_main_color"]["r"] + bar_info["health_bar_poison_color"]["r"], 255)
+	bar_info["health_bar_poison_color"]["g"] = min(bar_info["health_bar_main_color"]["g"] + bar_info["health_bar_poison_color"]["g"], 255)
+	bar_info["health_bar_poison_color"]["b"] = min(bar_info["health_bar_main_color"]["b"] + bar_info["health_bar_poison_color"]["b"], 255)
 
-	health_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B5C5)
-	print(f"Health Bar Width: {str(health_bar_width)}.")
+	bar_info["health_bar_width"] = binary_funcs.get_s16_at_address(f, 0x0007B5C5)
+	bar_info["health_bar_height"] = binary_funcs.get_u8_at_address(f, 0x0007B5C3)
 
-	health_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B5C3)
-	print(f"Health Bar Height: {str(health_bar_height)}.")
-
-	health_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B5CC, bytes([0x50, 0xD7]))
-	print(f"Health Bar Is Animated: {str(health_bar_is_animated)}.")
+	bar_info["health_bar_is_animated"] = binary_funcs.compare_data_at_address(f, 0x0007B5CC, bytes([0x50, 0xD7]))
 
 	# Air Bar
-	air_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B565)
-	print(f"Air Bar Main Color: {str(air_bar_main_color)}.")
+	bar_info["air_bar_main_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B565)
+	bar_info["air_bar_fade_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B56D)
 
-	air_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B56D)
-	print(f"Air Bar Fade Color: {str(air_bar_fade_color)}.")
-
-	air_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B579)
-	print(f"Air Bar Width: {str(air_bar_width)}.")
-
-	air_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B575)
-	print(f"Air Bar Height: {str(air_bar_height)}.")
+	bar_info["air_bar_width"] = binary_funcs.get_s16_at_address(f, 0x0007B579)
+	bar_info["air_bar_height"] = binary_funcs.get_u8_at_address(f, 0x0007B575)
 	
-	air_bar_x_offset = binary_funcs.get_s16_at_address(f, 0x0007B57F)
-	print(f"Air Bar X Offset: {str(air_bar_x_offset)}.")
+	bar_info["air_bar_x_offset"] = binary_funcs.get_s16_at_address(f, 0x0007B57F)
 	
-	air_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B587, bytes([0xD5, 0xF9]))
-	print(f"Air Bar Is Animated: {str(air_bar_is_animated)}.")
+	bar_info["air_bar_is_animated"] = binary_funcs.compare_data_at_address(f, 0x0007B587, bytes([0xD5, 0xF9]))
 	
 	# Sprint Bar
-	sprint_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B523)
-	print(f"Sprint Bar Main Color: {str(sprint_bar_main_color)}.")
+	bar_info["sprint_bar_main_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B523)
+	bar_info["sprint_bar_fade_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B528)
 
-	sprint_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B528)
-	print(f"Sprint Bar Fade Color: {str(sprint_bar_fade_color)}.")
+	bar_info["sprint_bar_width"] = binary_funcs.get_s16_at_address(f, 0x0007B538)
+	bar_info["sprint_bar_height"] = binary_funcs.get_u8_at_address(f, 0x0007B536)
 
-	sprint_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B538)
-	print(f"Sprint Bar Width: {str(sprint_bar_width)}.")
+	bar_info["sprint_bar_x_offset"] = binary_funcs.get_u8_at_address(f, 0x0007B531)
 
-	sprint_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B536)
-	print(f"Sprint Bar Height: {str(sprint_bar_height)}.")
-
-	sprint_bar_x_offset = binary_funcs.get_u8_at_address(f, 0x0007B531)
-	print(f"Sprint Bar X Offset: {str(sprint_bar_x_offset)}.")
-
-	sprint_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B541, bytes([0xDB, 0xD7]))
-	print(f"Sprint Bar Is Animated: {str(sprint_bar_is_animated)}.")
+	bar_info["sprint_bar_is_animated"] = binary_funcs.compare_data_at_address(f, 0x0007B541, bytes([0xDB, 0xD7]))
 	
 	# Loading Bar
-	loading_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B65A)
-	print(f"Loading Bar Main Color: {str(loading_bar_main_color)}.")
+	bar_info["loading_bar_main_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B65A)
+	bar_info["loading_bar_fade_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B65F)
 
-	loading_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B65F)
-	print(f"Loading Bar Main Color: {str(loading_bar_fade_color)}.")
+	bar_info["loading_bar_width"] = binary_funcs.get_s16_at_address(f, 0x0007B693)
+	bar_info["loading_bar_height"] = binary_funcs.get_u8_at_address(f, 0x0007B68F)
 
-	loading_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B693)
-	print(f"Loading Bar Width: {str(loading_bar_width)}.")
-
-	loading_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B68F)
-	print(f"Loading Bar Height: {str(loading_bar_height)}.")
-
-	loading_bar_hidden = False
+	bar_info["loading_bar_hidden"] = False
 	if not binary_funcs.is_nop_at_range(f, 0x0007B601, 0x0007B604):
-		loading_bar_hidden = True
-		print(f"Loading Bar Is Hidden: {str(loading_bar_hidden)}.")
+		bar_info["loading_bar_hidden"] = True
 
 	# Gradiant
-	is_gradiant_bar = check_if_using_gradiant_bar(f)
-	print(f"Is Using Gradiant Bar: {str(is_gradiant_bar)}.")
+	bar_info["is_gradiant_bar"] = check_if_using_gradiant_bar(f)
+
+	return bar_info
 
 
 def read_audio_info(f):
 	print("Scanning Audio Info...")
+
+	audio_info = {}
 
 	# Sample Rate
 	#f.seek(0x000a7309)
 	#sample_rate = int.from_bytes(f.read(2), byteorder='little', signed=False)
 	#print(f"Sample Rate: {str(sample_rate)}.")
 	
-	disable_lara_hit_sfx = binary_funcs.compare_data_at_address(f, 0x0000B02A, bytes([0x90, 0x90, 0x90, 0x90, 0x90]))
-	print(f"Disable Lara Hit SFX: {str(disable_lara_hit_sfx)}.")
+	audio_info["disable_lara_hit_sfx"] = binary_funcs.compare_data_at_address(f, 0x0000B02A, bytes([0x90, 0x90, 0x90, 0x90, 0x90]))
+	audio_info["lara_hit_sfx"] = binary_funcs.get_s8_at_address(f, 0x0000B029)
+	audio_info["disable_no_ammo_sfx"] = binary_funcs.compare_data_at_address(f, 0x0002D814, bytes([0x90, 0x90, 0x90, 0x90, 0x90]))
+	audio_info["no_ammo_sfx"] = binary_funcs.get_s8_at_address(f, 0x0002D813)
 
-	lara_hit_sfx = binary_funcs.get_s8_at_address(f, 0x0000B029)
-	print(f"Lara Hit SFX: {str(lara_hit_sfx)}.")
-	
-	disable_no_ammo_sfx = binary_funcs.compare_data_at_address(f, 0x0002D814, bytes([0x90, 0x90, 0x90, 0x90, 0x90]))
-	print(f"Disable Lara Hit SFX: {str(disable_no_ammo_sfx)}.")
+	audio_info["inside_jeep_track"] = binary_funcs.get_u8_at_address(f, 0x000663FE)
+	audio_info["outside_jeep_track"] = binary_funcs.get_u8_at_address(f, 0x00066EAD)
 
-	no_ammo_sfx = binary_funcs.get_s8_at_address(f, 0x0002D813)
-	print(f"No Ammo SFX: {str(no_ammo_sfx)}.")
+	audio_info["secret_track"] = binary_funcs.get_u8_at_address(f, 0x0004AACC)
 
-def read_distance_info(f):
-	print("Scanning Distance Info...")
+	audio_info["first_looped_audio_track"] = 105
+	change_looped_audio_track_range = binary_funcs.is_nop_at_range(f, 0x0004BE2C, 0x0004BE3C)
+	if change_looped_audio_track_range:
+		audio_info["first_looped_audio_track"] = binary_funcs.get_u8_at_address(f, 0x0004BE28)
+		
+	return audio_info
+
+def read_environment_info(f):
+	print("Scanning Environment Info...")
+
+	environment_info = {}
 
 	turn_off_distance_limit_completely = False
 	if binary_funcs.get_u8_at_address(f, 0x000702A6) == 0xEB and binary_funcs.get_u8_at_address(f, 0x00070492) == 0xEB and binary_funcs.get_u8_at_address(f, 0x000706A8):
-		turn_off_distance_limit_completely = True
-	print(f"Turn Off Distance Limit Completely: {str(turn_off_distance_limit_completely)}")
+		environment_info["disable_distance_limit"] = True
 
 	# Drawing Distance Range
-	drawing_distance_range = binary_funcs.get_float_at_address(f, 0x000B249C)
-	print(f"Drawing Distance Range: {str(drawing_distance_range)}")
+	environment_info["fog_end_range"] = int(binary_funcs.get_float_at_address(f, 0x000B249C))
 
 	# Hard Clipping Range
 	hard_clipping_range_first_value = binary_funcs.get_u32_at_address(f, 0x00075107)
 	hard_clipping_range_second_value = binary_funcs.get_u32_at_address(f, 0x0008CE33)
 
 	if (hard_clipping_range_first_value == hard_clipping_range_second_value):
-		print(f"Hard Clipping Range: {str(hard_clipping_range_first_value)}")
+		environment_info["far_view"] = int(hard_clipping_range_first_value)
 	else:
 		print(f"Hard Clipping Range: MISMATCH.")
 
 	# Distant Fog Range
-	distance_fog_range = binary_funcs.get_float_at_address(f, 0x000B2498)
-	print(f"Distance Fog Range: {str(distance_fog_range)}")
+	environment_info["fog_start_range"] = int(binary_funcs.get_float_at_address(f, 0x000B2498))
 
-def read_extended_info(f, is_extended_exe_size):
+	return environment_info
+
+def read_extended_info(f, is_extended_exe_size, trep_data):
 	print("Scanning Extended Info...")
 	
 	if is_extended_exe_size:
@@ -259,16 +251,16 @@ def read_extended_info(f, is_extended_exe_size):
 		print(f"Enable Crossbow Shell Casings: {str(enable_crossbow_shell_casings)}")
 
 		# Enable Ricochet SFX
-		enable_ricochet_sfx = False
 		if not binary_funcs.is_nop_at_range(f, 0x000EE422, 0x000EE43E):
-			enable_ricochet_sfx = True
-		print(f"Enable Ricochet SFX: {str(enable_ricochet_sfx)}")
+			trep_data["misc_info"]["enable_ricochet_sound_effect"] = True
+		else:
+			trep_data["misc_info"]["enable_ricochet_sound_effect"] = False
 
 		# Enable Custom Switch Animation OCB
 		enable_custom_switch_animation_ocb = False
 		if not binary_funcs.is_nop_at_range(f, 0x000EFBD0, 0x000EFD2D):
 			enable_custom_switch_animation_ocb = True
-			print(f"Enable Custom Switch Animation OCB: {str(enable_ricochet_sfx)}")
+			print(f"Enable Custom Switch Animation OCB: {str(enable_custom_switch_animation_ocb)}")
 
 			switch_on_ocb1_anim = binary_funcs.get_s16_at_address(f, 0x000EFC6E) # 1
 			switch_off_ocb1_anim = binary_funcs.get_s16_at_address(f, 0x000EFD00) # 2
@@ -288,19 +280,27 @@ def read_extended_info(f, is_extended_exe_size):
 			enable_rollingball_smash_and_kill = True
 			print(f"Enable Rollingball Smash and Kill: {str(enable_rollingball_smash_and_kill)}")
 
+	return trep_data
+
     
 def read_exe_file(exe_file_path, is_extended_exe_size):
-    with open(exe_file_path, 'rb') as f:
-        print("---")
-        read_audio_info(f)
-        print("---")
-        read_bar_info(f)
-        print("---")
-        read_enemy_info(f)
-        print("---")
-        read_distance_info(f)
-        print("---")
-        read_misc_info(f)
-        print("---")
-        read_extended_info(f, is_extended_exe_size)
-        print("---")
+	trep_data = {}
+
+	with open(exe_file_path, 'rb') as f:
+		print("---")
+		trep_data["audio_info"] = read_audio_info(f)
+		print("---")
+		trep_data["bar_info"] = read_bar_info(f)
+		print("---")
+		read_enemy_info(f)
+		print("---")
+		trep_data["environment_info"] = read_environment_info(f)
+		print("---")
+		trep_data["stat_info"] = read_stat_info(f)
+		print("---")
+		trep_data["misc_info"] = read_misc_info(f)
+		print("---")
+		trep_data = read_extended_info(f, is_extended_exe_size, trep_data)
+		print("---")
+
+	return trep_data

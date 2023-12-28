@@ -21,7 +21,7 @@ def get_bgr_color_at_address(f, start_address) -> dict:
 	f.seek(start_address)
 	bytes = f.read(3)
 
-	return {'blue':bytes[0], 'green':bytes[1], 'red':bytes[2]}
+	return {'b':bytes[0], 'g':bytes[1], 'r':bytes[2]}
 
 def get_s8_at_address(f, start_address) -> int:
 	f.seek(start_address)
@@ -51,7 +51,9 @@ def get_float_at_address(f, start_address) -> float:
 	f.seek(start_address)
 	return struct.unpack('f', f.read(4))[0]
 
-def get_fixed_string_at(f, start_address, length) -> float:
-	f.seek(start_address)
-	str_buffer = f.read(length)
-	return str_buffer.decode('ascii')
+def get_fixed_string_at(f, start_address, length) -> str:
+    f.seek(start_address)
+    str_buffer = f.read(length)
+    str_decoded = str_buffer.split(b'\x00', 1)[0].decode('ascii')  # stop at first null character
+	
+    return str_decoded

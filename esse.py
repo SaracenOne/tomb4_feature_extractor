@@ -60,7 +60,7 @@ def read_data(f, d, key_name, base_offset, offset, max_block_size, type, string_
 
     return d
 
-def read_binary_file(file_path):
+def read_binary_file(file_path, trep_data):
     if not os.path.exists(file_path):
         print(f"The file {file_path} does not exist.")
         return None
@@ -327,7 +327,17 @@ def read_binary_file(file_path):
                 data = read_data(f, data, 'VertMirror' + str(i).zfill(2), base_offset, vert_mirror_offset, level_block_size, "BYTE", 0, 255)
                 data = read_data(f, data, 'VertMirror' + str(i).zfill(2) + 'Room', base_offset, vert_mirror_offset + 1, level_block_size, "DWORD", 0, 0)
                 vert_mirror_offset += 5
+                
 
-            level_array.append(data)
+            level_info = {}
+
+            environment_info = {}
+            
+            environment_info["fog_start_range"] = int(data["DF"])
+            environment_info["fog_end_range"] = int(data["DD"])
+
+            level_info["environment_info"] = environment_info
+
+            level_array.append(level_info)
 
     return level_array
