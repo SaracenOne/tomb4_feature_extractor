@@ -113,7 +113,9 @@ def read_stat_info(f):
 
 	stat_info = {}
 
-	stat_info["secret_count"] = int(binary_funcs.get_fixed_string_at(f, 0x000B1785, 2))
+	secret_count = int(binary_funcs.get_fixed_string_at(f, 0x000B1785, 2))
+	if secret_count != 70:
+		stat_info["secret_count"] = secret_count
 
 	return stat_info
 
@@ -123,54 +125,113 @@ def read_bar_info(f):
 	bar_info = {}
 
 	# Health Bar
-	bar_info["health_bar_main_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B5B0)
-	bar_info["health_bar_fade_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B5bA)
-	bar_info["health_bar_poison_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B5AB)
+	health_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5B0)
+	if health_bar_main_color['r'] != 255 or health_bar_main_color['g'] != 0 or health_bar_main_color['b'] != 0:
+		bar_info["health_bar_main_color"] = health_bar_main_color
 
-	bar_info["health_bar_poison_color"]["r"] = min(bar_info["health_bar_main_color"]["r"] + bar_info["health_bar_poison_color"]["r"], 255)
-	bar_info["health_bar_poison_color"]["g"] = min(bar_info["health_bar_main_color"]["g"] + bar_info["health_bar_poison_color"]["g"], 255)
-	bar_info["health_bar_poison_color"]["b"] = min(bar_info["health_bar_main_color"]["b"] + bar_info["health_bar_poison_color"]["b"], 255)
+	health_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5BA)
+	if health_bar_fade_color['r'] != 0 or health_bar_fade_color['g'] != 0 or health_bar_fade_color['b'] != 0:
+		bar_info["health_bar_fade_color"] = health_bar_fade_color
 
-	bar_info["health_bar_width"] = binary_funcs.get_s16_at_address(f, 0x0007B5C5)
-	bar_info["health_bar_height"] = binary_funcs.get_u8_at_address(f, 0x0007B5C3)
+	health_bar_poison_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5AB)
+	if health_bar_poison_color['r'] != 0 or health_bar_poison_color['g'] != 255 or health_bar_poison_color['b'] != 0:
+		bar_info["health_bar_poison_color"]['r'] = min(bar_info["health_bar_main_color"]['r'] + bar_info["health_bar_poison_color"]['r'], 255)
+		bar_info["health_bar_poison_color"]['g'] = min(bar_info["health_bar_main_color"]['g'] + bar_info["health_bar_poison_color"]['g'], 255)
+		bar_info["health_bar_poison_color"]['b'] = min(bar_info["health_bar_main_color"]['b'] + bar_info["health_bar_poison_color"]['b'], 255)
 
-	bar_info["health_bar_is_animated"] = binary_funcs.compare_data_at_address(f, 0x0007B5CC, bytes([0x50, 0xD7]))
+
+	health_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B5C5)
+	if health_bar_width != 150:
+		bar_info["health_bar_width"] = health_bar_width
+
+
+	health_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B5C3)
+	if health_bar_height != 12:
+		bar_info["health_bar_height"] = health_bar_height
+
+	health_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B5CC, bytes([0x50, 0xD7]))
+	if health_bar_is_animated:
+		bar_info["health_bar_is_animated"] = health_bar_is_animated
 
 	# Air Bar
-	bar_info["air_bar_main_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B565)
-	bar_info["air_bar_fade_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B56D)
+	air_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B565)
+	if air_bar_main_color['r'] != 0 or air_bar_main_color['g'] != 0 or air_bar_main_color['b'] != 255:
+		bar_info["air_bar_main_color"] = air_bar_main_color
 
-	bar_info["air_bar_width"] = binary_funcs.get_s16_at_address(f, 0x0007B579)
-	bar_info["air_bar_height"] = binary_funcs.get_u8_at_address(f, 0x0007B575)
+	air_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B56D)
+	if air_bar_fade_color['r'] != 0 or air_bar_fade_color['g'] != 0 or air_bar_fade_color['b'] != 0:
+		bar_info["air_bar_fade_color"] = air_bar_fade_color
+
+	air_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B579)
+	if air_bar_width != 150:
+		bar_info["air_bar_width"] = air_bar_width
+
+
+	air_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B575)
+	if air_bar_height != 12:
+		bar_info["air_bar_height"] = air_bar_height
 	
-	bar_info["air_bar_x_offset"] = binary_funcs.get_s16_at_address(f, 0x0007B57F)
+	air_bar_x_offset = binary_funcs.get_s16_at_address(f, 0x0007B57F)
+	if air_bar_x_offset != 490:
+		bar_info["air_bar_x_offset"] = air_bar_x_offset
 	
-	bar_info["air_bar_is_animated"] = binary_funcs.compare_data_at_address(f, 0x0007B587, bytes([0xD5, 0xF9]))
+	air_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B587, bytes([0x95, 0xD7]))
+	if air_bar_is_animated:
+		bar_info["air_bar_is_animated"] = air_bar_is_animated
 	
 	# Sprint Bar
-	bar_info["sprint_bar_main_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B523)
-	bar_info["sprint_bar_fade_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B528)
+	sprint_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B523)
+	if sprint_bar_main_color['r'] != 0 or sprint_bar_main_color['g'] != 255 or sprint_bar_main_color['b'] != 0:
+		bar_info["sprint_bar_main_color"] = sprint_bar_main_color
 
-	bar_info["sprint_bar_width"] = binary_funcs.get_s16_at_address(f, 0x0007B538)
-	bar_info["sprint_bar_height"] = binary_funcs.get_u8_at_address(f, 0x0007B536)
 
-	bar_info["sprint_bar_x_offset"] = binary_funcs.get_u8_at_address(f, 0x0007B531)
+	sprint_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B528)
+	if sprint_bar_fade_color['r'] != 0 or sprint_bar_fade_color['g'] != 0 or sprint_bar_fade_color['b'] != 0:
+		bar_info["sprint_bar_fade_color"] = sprint_bar_fade_color
 
-	bar_info["sprint_bar_is_animated"] = binary_funcs.compare_data_at_address(f, 0x0007B541, bytes([0xDB, 0xD7]))
+	sprint_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B538)
+	if sprint_bar_width != 150:
+		bar_info["sprint_bar_width"] = sprint_bar_width
+	
+	
+	sprint_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B536)
+	if sprint_bar_height != 12:
+		bar_info["sprint_bar_height"] = sprint_bar_height
+
+	sprint_bar_x_offset = binary_funcs.get_s16_at_address(f, 0x0007B531)
+	if sprint_bar_x_offset != 490:
+		bar_info["sprint_bar_x_offset"] = sprint_bar_x_offset
+
+	sprint_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B541, bytes([0xDB, 0xD7]))
+	if sprint_bar_is_animated:
+		bar_info["sprint_bar_is_animated"] = sprint_bar_is_animated
 	
 	# Loading Bar
-	bar_info["loading_bar_main_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B65A)
-	bar_info["loading_bar_fade_color"] = binary_funcs.get_bgr_color_at_address(f, 0x0007B65F)
+	loading_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B65A)
+	if loading_bar_main_color['r'] != 159 or loading_bar_main_color['g'] != 31 or loading_bar_main_color['b'] != 128:
+		bar_info["loading_bar_main_color"] = loading_bar_main_color
 
-	bar_info["loading_bar_width"] = binary_funcs.get_s16_at_address(f, 0x0007B693)
-	bar_info["loading_bar_height"] = binary_funcs.get_u8_at_address(f, 0x0007B68F)
 
-	bar_info["loading_bar_hidden"] = False
-	if not binary_funcs.is_nop_at_range(f, 0x0007B601, 0x0007B604):
-		bar_info["loading_bar_hidden"] = True
+	loading_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B65F)
+	if loading_bar_fade_color['r'] != 0 or loading_bar_fade_color['g'] != 0 or loading_bar_fade_color['b'] != 0:
+		bar_info["loading_bar_fade_color"] = loading_bar_fade_color
+
+	loading_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B693)
+	if loading_bar_width != 600:
+		bar_info["loading_bar_width"] = loading_bar_width
+	
+	loading_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B68F)
+	if loading_bar_height != 15:
+		bar_info["loading_bar_height"] = loading_bar_height
+
+	loading_bar_hidden = binary_funcs.is_nop_at_range(f, 0x0007B601, 0x0007B604)
+	if loading_bar_hidden:
+		bar_info["loading_bar_hidden"] = loading_bar_hidden
 
 	# Gradiant
-	bar_info["is_gradiant_bar"] = check_if_using_gradiant_bar(f)
+	is_gradiant_bar = check_if_using_gradiant_bar(f)
+	if is_gradiant_bar:
+		bar_info["is_gradiant_bar"] = is_gradiant_bar
 
 	return bar_info
 
@@ -185,20 +246,39 @@ def read_audio_info(f):
 	#sample_rate = int.from_bytes(f.read(2), byteorder='little', signed=False)
 	#print(f"Sample Rate: {str(sample_rate)}.")
 	
-	audio_info["disable_lara_hit_sfx"] = binary_funcs.compare_data_at_address(f, 0x0000B02A, bytes([0x90, 0x90, 0x90, 0x90, 0x90]))
-	audio_info["lara_hit_sfx"] = binary_funcs.get_s8_at_address(f, 0x0000B029)
-	audio_info["disable_no_ammo_sfx"] = binary_funcs.compare_data_at_address(f, 0x0002D814, bytes([0x90, 0x90, 0x90, 0x90, 0x90]))
-	audio_info["no_ammo_sfx"] = binary_funcs.get_s8_at_address(f, 0x0002D813)
+	disable_lara_hit_sfx = binary_funcs.compare_data_at_address(f, 0x0000B02A, bytes([0x90, 0x90, 0x90, 0x90, 0x90]))
+	if disable_lara_hit_sfx:
+		audio_info["disable_lara_hit_sfx"] = disable_lara_hit_sfx
 
-	audio_info["inside_jeep_track"] = binary_funcs.get_u8_at_address(f, 0x000663FE)
-	audio_info["outside_jeep_track"] = binary_funcs.get_u8_at_address(f, 0x00066EAD)
+	lara_hit_sfx = binary_funcs.get_s8_at_address(f, 0x0000B029)
+	if lara_hit_sfx != 50:
+		audio_info["lara_hit_sfx"] = lara_hit_sfx
 
-	audio_info["secret_track"] = binary_funcs.get_u8_at_address(f, 0x0004AACC)
+	disable_no_ammo_sfx = binary_funcs.compare_data_at_address(f, 0x0002D814, bytes([0x90, 0x90, 0x90, 0x90, 0x90]))
+	if disable_no_ammo_sfx:
+		audio_info["disable_no_ammo_sfx"] = disable_no_ammo_sfx
+	
+	no_ammo_sfx = binary_funcs.get_s8_at_address(f, 0x0002D813)
+	if no_ammo_sfx != 48:
+		audio_info["no_ammo_sfx"] = no_ammo_sfx
 
-	audio_info["first_looped_audio_track"] = 105
+	inside_jeep_track = binary_funcs.get_u8_at_address(f, 0x000663FE)
+	if inside_jeep_track != 98:
+		audio_info["inside_jeep_track"] = inside_jeep_track
+
+	outside_jeep_track = binary_funcs.get_u8_at_address(f, 0x00066EAD)
+	if outside_jeep_track != 110:
+		audio_info["outside_jeep_track"] = outside_jeep_track
+
+	secret_track = binary_funcs.get_u8_at_address(f, 0x0004AACC)
+	if secret_track != 5:
+		audio_info["secret_track"] = secret_track
+
 	change_looped_audio_track_range = binary_funcs.is_nop_at_range(f, 0x0004BE2C, 0x0004BE3C)
 	if change_looped_audio_track_range:
-		audio_info["first_looped_audio_track"] = binary_funcs.get_u8_at_address(f, 0x0004BE28)
+		first_looped_audio_track = binary_funcs.get_u8_at_address(f, 0x0004BE28)
+		if first_looped_audio_track != 105:
+			audio_info["first_looped_audio_track"] = first_looped_audio_track
 		
 	return audio_info
 
@@ -207,24 +287,28 @@ def read_environment_info(f):
 
 	environment_info = {}
 
-	turn_off_distance_limit_completely = False
 	if binary_funcs.get_u8_at_address(f, 0x000702A6) == 0xEB and binary_funcs.get_u8_at_address(f, 0x00070492) == 0xEB and binary_funcs.get_u8_at_address(f, 0x000706A8):
 		environment_info["disable_distance_limit"] = True
 
 	# Drawing Distance Range
-	environment_info["fog_end_range"] = int(binary_funcs.get_float_at_address(f, 0x000B249C))
+	fog_end_range = int(binary_funcs.get_float_at_address(f, 0x000B249C))
+	if fog_end_range != 20480:
+		environment_info["fog_end_range"] = fog_end_range
 
 	# Hard Clipping Range
 	hard_clipping_range_first_value = binary_funcs.get_u32_at_address(f, 0x00075107)
 	hard_clipping_range_second_value = binary_funcs.get_u32_at_address(f, 0x0008CE33)
 
 	if (hard_clipping_range_first_value == hard_clipping_range_second_value):
-		environment_info["far_view"] = int(hard_clipping_range_first_value)
+		if hard_clipping_range_first_value != 20480:
+			environment_info["far_view"] = int(hard_clipping_range_first_value)
 	else:
 		print(f"Hard Clipping Range: MISMATCH.")
 
 	# Distant Fog Range
-	environment_info["fog_start_range"] = int(binary_funcs.get_float_at_address(f, 0x000B2498))
+	fog_start_range = int(binary_funcs.get_float_at_address(f, 0x000B2498))
+	if fog_start_range != 12288:
+		environment_info["fog_start_range"] = fog_start_range
 
 	return environment_info
 
@@ -265,8 +349,6 @@ def read_extended_info(f, is_extended_exe_size, trep_data):
 		# Enable Ricochet SFX
 		if not binary_funcs.is_nop_at_range(f, 0x000EE422, 0x000EE43E):
 			trep_data["misc_info"]["enable_ricochet_sound_effect"] = True
-		else:
-			trep_data["misc_info"]["enable_ricochet_sound_effect"] = False
 
 		# Enable Custom Switch Animation OCB
 		enable_custom_switch_animation_ocb = False
@@ -295,8 +377,6 @@ def read_extended_info(f, is_extended_exe_size, trep_data):
 		# Enable Ricochet SFX
 		if not binary_funcs.is_nop_at_range(f, 0x000EE43F, 0x000EE9DE):
 			trep_data["misc_info"]["enable_standing_pushables"] = True
-		else:
-			trep_data["misc_info"]["enable_standing_pushables"] = False
 
 	return trep_data
 
