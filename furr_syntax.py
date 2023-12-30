@@ -326,6 +326,8 @@ def extract_racetimer_events_from_exe(f, opcode_list, is_using_remapped_memory):
 
 	f.seek(RACETIMER_EVENT_DATA_ADDRESS)
 
+	racetrack_events = []
+
 	first_block = f.read(len(RACETIMER_EVENT_NOTIFY))
 	if first_block == RACETIMER_EVENT_NOTIFY:
 		first_block = f.read(len(RACETIMER_EVENT_START))
@@ -333,7 +335,6 @@ def extract_racetimer_events_from_exe(f, opcode_list, is_using_remapped_memory):
 			time = struct.unpack('<I', f.read(4))[0]
 			f.seek(6, 1)
 			
-			racetrack_events = []
 			current_command_list = []
 			nop_count = 0
 
@@ -363,6 +364,8 @@ def extract_racetimer_events_from_exe(f, opcode_list, is_using_remapped_memory):
 						current_command_list.append({"new_command":["UNKNOWN COMMAND"], "was_nop":False})
 					nop_count = 0
 			print(racetrack_events)
+	
+	return racetrack_events
 
 
 def extract_flipeffect_table_from_exe(f, opcode_list, is_using_remapped_memory):
@@ -432,6 +435,8 @@ def extract_flipeffect_table_from_exe(f, opcode_list, is_using_remapped_memory):
 				#	break
 		else:
 			print("Could not find any commands for flipeffect: " + str(i + FIRST_CUSTOM_FLIPEFFECT))
+	
+	return flipeffect_table
 				
 def read_exe_file(exe_file_path, syntax_file_name, is_using_remapped_memory):
 	opcodes = load_syntax_file(syntax_file_name)
@@ -445,6 +450,10 @@ def read_exe_file(exe_file_path, syntax_file_name, is_using_remapped_memory):
 		"first_arg_type":"LONG",
 		"second_arg_type":"UNSIGNEDINTEGER"})
 
+	ret_val = {}
+
 	with open(exe_file_path, 'rb') as f:
-		extract_flipeffect_table_from_exe(f, opcodes, is_using_remapped_memory)
-		extract_racetimer_events_from_exe(f, opcodes, is_using_remapped_memory)
+		ret_val["furr_flipeffects"] = extract_flipeffect_table_from_exe(f, opcodes, is_using_remapped_memory)
+		ret_val["furr_racetimer_events"] = extract_racetimer_events_from_exe(f, opcodes, is_using_remapped_memory)
+
+	return ret_val

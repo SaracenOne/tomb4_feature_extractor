@@ -151,9 +151,11 @@ def detect_tomb4_game(path=None, exe_file=None):
 	else:
 		print(f"No eSSe script file found.")
 
+	furr_data = {}
+
 	if is_extended_exe_size:
 		print("Scanning for FURR modifications in exe file...")
-		furr_syntax.read_exe_file(exe_path, "syntax.fln", is_using_remapped_memory)
+		furr_data = furr_syntax.read_exe_file(exe_path, "syntax.fln", is_using_remapped_memory)
 	else:
 		print("Unknown EXE file size, skipping FURR extraction in exe file...")
 
@@ -167,6 +169,8 @@ def detect_tomb4_game(path=None, exe_file=None):
 	global_info["trng_version_maintainence"] = 0
 	global_info["trng_version_build"] = 0
 	global_info["trng_version_is_plus"] = 0
+
+	global_info["furr_data"] = furr_data
 
 	if exe_file_size != EXE_DEFAULT_SIZE and exe_file_size != EXE_TREP_EXTENDED_SIZE:
 		if trng_version and len(trng_version) == 4:
