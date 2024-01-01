@@ -135,6 +135,8 @@ def read_bar_info(f):
 
 	health_bar_poison_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5AB)
 	if health_bar_poison_color['r'] != 0 or health_bar_poison_color['g'] != 255 or health_bar_poison_color['b'] != 0:
+		bar_info["health_bar_poison_color"] = {"r":0, "g":0, "b":0}
+
 		bar_info["health_bar_poison_color"]['r'] = min(bar_info["health_bar_main_color"]['r'] + bar_info["health_bar_poison_color"]['r'], 255)
 		bar_info["health_bar_poison_color"]['g'] = min(bar_info["health_bar_main_color"]['g'] + bar_info["health_bar_poison_color"]['g'], 255)
 		bar_info["health_bar_poison_color"]['b'] = min(bar_info["health_bar_main_color"]['b'] + bar_info["health_bar_poison_color"]['b'], 255)
