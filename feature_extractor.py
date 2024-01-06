@@ -138,6 +138,7 @@ def detect_tomb4_game(path=None, exe_file=None):
 	environment_info = trep_data["environment_info"]
 	misc_info = trep_data["misc_info"]
 	stat_info = trep_data["stat_info"]
+	meta_info = trep_data["meta_info"]
 
 	print("Scanning for Leikkuri modifications in exe file...")
 	font_info = leikkuri.read_exe_file(exe_path)
@@ -160,8 +161,11 @@ def detect_tomb4_game(path=None, exe_file=None):
 	furr_data = {}
 
 	if is_extended_exe_size:
-		print("Scanning for FURR modifications in exe file...")
-		furr_data = furr_syntax.read_exe_file(exe_path, "syntax.fln", is_using_remapped_memory)
+		if meta_info["furr_support"]:
+			print("Scanning for FURR modifications in exe file...")
+			furr_data = furr_syntax.read_exe_file(exe_path, "syntax.fln", is_using_remapped_memory)
+		else:
+			print("FURR support not detected. Skipping.")
 	else:
 		print("Unknown EXE file size, skipping FURR extraction in exe file...")
 

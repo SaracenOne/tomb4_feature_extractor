@@ -332,8 +332,15 @@ def read_extended_info(f, is_extended_exe_size, trep_data, is_patch_binary):
 	
 	trep_data["meta_info"]["esse_scripted_params"] = False
 	trep_data["meta_info"]["esse_multiple_mirrors"] = False
+
+	trep_data["meta_info"]["furr_support"] = False
 	
 	if is_extended_exe_size:
+		# FURR support
+		if not binary_funcs.is_nop_at_range(f, 0x000C1000, 0x000C2FFF):
+			print(f"FURR support enabled!")
+			trep_data["meta_info"]["furr_support"] = True
+			
 		# eSSe file loading enable
 		if not binary_funcs.is_nop_at_range(f, 0x000EFBA0, 0x000EFBC8) or \
 		not binary_funcs.is_nop_at_range(f, 0x000EFFE0, 0x000F0002):
