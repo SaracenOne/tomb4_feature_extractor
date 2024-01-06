@@ -125,7 +125,13 @@ def detect_tomb4_game(path=None, exe_file=None):
 	trng_version = detect_next_generation_dll(path)
 
 	print("Scanning for TREP modifications in exe file...")
-	trep_data = trep.read_exe_file(exe_path, is_extended_exe_size)
+	trep_data = trep.read_binary_file(exe_path, is_extended_exe_size, False)
+
+	patches_path = os.path.join(path, "patches.bin")
+	print(f"Searching for {patches_path}...")
+	if os.path.exists(patches_path):
+		print(f"Found FLEP patches file at {patches_path}.")
+		trep_data = trep.read_binary_file(patches_path, True, True)
 
 	audio_info = trep_data["audio_info"]
 	bar_info = trep_data["bar_info"]

@@ -274,7 +274,7 @@ def read_binary_file(file_path, trep_data):
             data = read_data(f, data, 'MPBarHPDecSpeed', base_offset, 845, level_block_size, "BYTE", 0, 40)
             data = read_data(f, data, 'AudioPath', base_offset, 847, level_block_size, "FIXED_STRING", 53, "audio\\%s")
             data = read_data(f, data, 'HardClipRange', base_offset, 900, level_block_size, "DWORD", 0, 20480)
-            data = read_data(f, data, 'AudioPath', base_offset, 904, level_block_size, "FIXED_STRING", 40, "screens\loading.bmp")
+            data = read_data(f, data, 'LoadingPath', base_offset, 904, level_block_size, "FIXED_STRING", 40, "screens\loading.bmp")
             data = read_data(f, data, 'OptionsScreen', base_offset, 944, level_block_size, "FIXED_STRING", 40, "screens\options.bmp")
             data = read_data(f, data, 'InventoryScreen', base_offset, 984, level_block_size, "FIXED_STRING", 40, "screens\inventory.bmp")
             data = read_data(f, data, 'LoadSaveScreen', base_offset, 1024, level_block_size, "FIXED_STRING", 40, "screens\loadsave.bmp")
