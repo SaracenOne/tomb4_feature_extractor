@@ -86,10 +86,8 @@ def read_misc_info(f, is_patch_binary):
 		print(f"Look Transparency Disabled: {str(remove_look_transparency)}.")
 
 		# Lara impales on spikes
-		lara_impales_on_spikes = False
 		if binary_funcs.is_nop_at_range(f, 0x000160ED, 0x000160EE):
-			lara_impales_on_spikes = True
-		print(f"Lara Impales on Spikes: {str(lara_impales_on_spikes)}.")
+			misc_info["lara_impales_on_spikes"] = True
 
 		# Static Shatter Range
 		lower_static_shatter_threshold = binary_funcs.get_u16_at_address(f, 0x0004d013)
