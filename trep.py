@@ -249,7 +249,7 @@ def read_bar_info(f, is_patch_binary):
 	return bar_info
 
 
-def read_audio_info(f, is_patch_binary):
+def read_audio_info(f, is_using_remapped_memory, is_patch_binary):
 	print("Scanning Audio Info...")
 
 	audio_info = {}
@@ -260,6 +260,12 @@ def read_audio_info(f, is_patch_binary):
 	#print(f"Sample Rate: {str(sample_rate)}.")
 	
 	if not is_patch_binary:
+		if is_using_remapped_memory:
+			using_bass = not binary_funcs.is_nop_at_range(f, 0x000F66C0, 0x000F6E7E)
+			if using_bass:
+				audio_info["new_audio_system"] = True
+				audio_info["old_cd_trigger_system"] = False
+
 		disable_lara_hit_sfx = binary_funcs.compare_data_at_address(f, 0x0000B02A, bytes([0x90, 0x90, 0x90, 0x90, 0x90]))
 		if disable_lara_hit_sfx:
 			audio_info["disable_lara_hit_sfx"] = disable_lara_hit_sfx
@@ -404,7 +410,7 @@ def read_extended_info(f, is_extended_exe_size, trep_data, is_patch_binary):
 	return trep_data
 
     
-def read_binary_file(exe_file_path, is_extended_exe_size, is_patch_binary):
+def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memory, is_patch_binary):
 	trep_data = {}
 
 	# Meta info is not serialized
@@ -412,7 +418,7 @@ def read_binary_file(exe_file_path, is_extended_exe_size, is_patch_binary):
 
 	with open(exe_file_path, 'rb') as f:
 		print("---")
-		trep_data["audio_info"] = read_audio_info(f, is_patch_binary)
+		trep_data["audio_info"] = read_audio_info(f, is_using_remapped_memory, is_patch_binary)
 		print("---")
 		trep_data["bar_info"] = read_bar_info(f, is_patch_binary)
 		print("---")
