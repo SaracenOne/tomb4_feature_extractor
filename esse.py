@@ -60,7 +60,7 @@ def read_data(f, d, key_name, base_offset, offset, max_block_size, type, string_
 
     return d
 
-def read_binary_file(file_path, trep_data):
+def read_binary_file(file_path, patch_data):
     if not os.path.exists(file_path):
         print(f"The file {file_path} does not exist.")
         return None
@@ -331,7 +331,7 @@ def read_binary_file(file_path, trep_data):
 
             level_info = {}
 
-            if trep_data["meta_info"]["esse_scripted_params"] == True:
+            if patch_data["meta_info"]["esse_scripted_params"] == True:
                 environment_info = {}
                 
                 environment_info["fog_start_range"] = int(data["DF"])

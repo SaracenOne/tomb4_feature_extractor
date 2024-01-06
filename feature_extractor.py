@@ -6,7 +6,7 @@ import pefile
 import json
 
 import binary_funcs
-import trep
+import trle_patch_binary
 import esse
 import leikkuri
 import furr_syntax
@@ -125,20 +125,20 @@ def detect_tomb4_game(path=None, exe_file=None):
 	trng_version = detect_next_generation_dll(path)
 
 	print("Scanning for TREP modifications in exe file...")
-	trep_data = trep.read_binary_file(exe_path, is_extended_exe_size, is_using_remapped_memory, False)
+	patch_data = trle_patch_binary.read_binary_file(exe_path, is_extended_exe_size, is_using_remapped_memory, False)
 
 	patches_path = os.path.join(path, "patches.bin")
 	print(f"Searching for {patches_path}...")
 	if os.path.exists(patches_path):
 		print(f"Found FLEP patches file at {patches_path}.")
-		trep_data = trep.read_binary_file(patches_path, True, False, True)
+		patch_data = trle_patch_binary.read_binary_file(patches_path, True, False, True)
 
-	audio_info = trep_data["audio_info"]
-	bar_info = trep_data["bar_info"]
-	environment_info = trep_data["environment_info"]
-	misc_info = trep_data["misc_info"]
-	stat_info = trep_data["stat_info"]
-	meta_info = trep_data["meta_info"]
+	audio_info = patch_data["audio_info"]
+	bar_info = patch_data["bar_info"]
+	environment_info = patch_data["environment_info"]
+	misc_info = patch_data["misc_info"]
+	stat_info = patch_data["stat_info"]
+	meta_info = patch_data["meta_info"]
 
 	print("Scanning for Leikkuri modifications in exe file...")
 	font_info = leikkuri.read_exe_file(exe_path)
@@ -148,7 +148,7 @@ def detect_tomb4_game(path=None, exe_file=None):
 	print(f"Searching for {esse_path}...")
 	if os.path.exists(esse_path):
 		print(f"Found eSSe script file at {esse_path}.")
-		esse_result = esse.read_binary_file(esse_path, trep_data)
+		esse_result = esse.read_binary_file(esse_path, patch_data)
 
 		print("eSSe script file content:")
 		level_id = 0

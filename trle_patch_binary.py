@@ -333,28 +333,28 @@ def read_environment_info(f, is_patch_binary):
 
 	return environment_info
 
-def read_extended_info(f, is_extended_exe_size, trep_data, is_patch_binary):
+def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 	print("Scanning Extended Info...")
 	
-	trep_data["meta_info"]["esse_scripted_params"] = False
-	trep_data["meta_info"]["esse_multiple_mirrors"] = False
+	patch_data["meta_info"]["esse_scripted_params"] = False
+	patch_data["meta_info"]["esse_multiple_mirrors"] = False
 
-	trep_data["meta_info"]["furr_support"] = False
+	patch_data["meta_info"]["furr_support"] = False
 	
 	if is_extended_exe_size:
 		# FURR support
 		if not binary_funcs.is_nop_at_range(f, 0x000C1000, 0x000C2FFF):
 			print(f"FURR support enabled!")
-			trep_data["meta_info"]["furr_support"] = True
+			patch_data["meta_info"]["furr_support"] = True
 			
 		# eSSe file loading enable
 		if not binary_funcs.is_nop_at_range(f, 0x000EFBA0, 0x000EFBC8) or \
 		not binary_funcs.is_nop_at_range(f, 0x000EFFE0, 0x000F0002):
 			print(f"eSSe file loading enabled!")
 			if not binary_funcs.is_nop_at_range(f, 0x000F0010, 0x000F0A3D):
-				trep_data["meta_info"]["esse_scripted_params"] = True
+				patch_data["meta_info"]["esse_scripted_params"] = True
 			if not binary_funcs.is_nop_at_range(f, 0x000F5E10, 0x000F6113):
-				trep_data["meta_info"]["esse_multiple_mirrors"] = True
+				patch_data["meta_info"]["esse_multiple_mirrors"] = True
 
 		# Show HP bar in Inventory.
 		show_hp_bar_in_inventory = False
@@ -401,36 +401,36 @@ def read_extended_info(f, is_extended_exe_size, trep_data, is_patch_binary):
 
 		# Enable Ricochet SFX
 		if not binary_funcs.is_nop_at_range(f, 0x000EE422, 0x000EE43E):
-			trep_data["misc_info"]["enable_ricochet_sound_effect"] = True
+			patch_data["misc_info"]["enable_ricochet_sound_effect"] = True
 
 		# Enable Ricochet SFX
 		if not binary_funcs.is_nop_at_range(f, 0x000EE43F, 0x000EE9DE):
-			trep_data["misc_info"]["enable_standing_pushables"] = True
+			patch_data["misc_info"]["enable_standing_pushables"] = True
 
-	return trep_data
+	return patch_data
 
     
 def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memory, is_patch_binary):
-	trep_data = {}
+	patch_data = {}
 
 	# Meta info is not serialized
-	trep_data["meta_info"] = {}
+	patch_data["meta_info"] = {}
 
 	with open(exe_file_path, 'rb') as f:
 		print("---")
-		trep_data["audio_info"] = read_audio_info(f, is_using_remapped_memory, is_patch_binary)
+		patch_data["audio_info"] = read_audio_info(f, is_using_remapped_memory, is_patch_binary)
 		print("---")
-		trep_data["bar_info"] = read_bar_info(f, is_patch_binary)
+		patch_data["bar_info"] = read_bar_info(f, is_patch_binary)
 		print("---")
 		read_enemy_info(f, is_patch_binary)
 		print("---")
-		trep_data["environment_info"] = read_environment_info(f, is_patch_binary)
+		patch_data["environment_info"] = read_environment_info(f, is_patch_binary)
 		print("---")
-		trep_data["stat_info"] = read_stat_info(f, is_patch_binary)
+		patch_data["stat_info"] = read_stat_info(f, is_patch_binary)
 		print("---")
-		trep_data["misc_info"] = read_misc_info(f, is_patch_binary)
+		patch_data["misc_info"] = read_misc_info(f, is_patch_binary)
 		print("---")
-		trep_data = read_extended_info(f, is_extended_exe_size, trep_data, is_patch_binary)
+		patch_data = read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary)
 		print("---")
 
-	return trep_data
+	return patch_data
