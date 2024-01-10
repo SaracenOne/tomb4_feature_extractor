@@ -1,4 +1,3 @@
-import struct
 import binary_funcs
 
 def check_if_using_gradiant_bar(f) -> bool:
@@ -24,6 +23,24 @@ def check_if_using_gradiant_bar(f) -> bool:
 		return False
 	
 	if binary_funcs.get_u8_at_address(f, 0x0007B244) != 0xB4:
+		return False
+
+	return True
+
+def flep_patch_check_if_has_gun_ricochet_effect(f) -> bool:
+	if binary_funcs.get_u8_at_address(f, 0x00033FC6) != 0xE9:
+		return False
+	if binary_funcs.get_u8_at_address(f, 0x00033FC7) != 0xB5:
+		return False
+	if binary_funcs.get_u8_at_address(f, 0x00033FC8) != 0x0F:
+		return False
+	if binary_funcs.get_u8_at_address(f, 0x00033FC9) != 0x3E:
+		return False
+	if binary_funcs.get_u8_at_address(f, 0x00033FCA) != 0x00:
+		return False
+	if binary_funcs.get_u8_at_address(f, 0x00033FCB) != 0x90:
+		return False
+	if binary_funcs.get_u8_at_address(f, 0x00033FCC) != 0x90:
 		return False
 
 	return True
@@ -248,6 +265,42 @@ def read_bar_info(f, is_patch_binary):
 
 	return bar_info
 
+def read_gfx_blood_info(f, is_patch_binary):
+	blood_info = {}
+
+	blood_size = binary_funcs.get_u8_at_address(f, 0x00038A18)
+	if blood_size != 0x08:
+		blood_info["blood_size"] = blood_size
+		
+	blood_intensity = binary_funcs.get_u8_at_address(f, 0x0003891C)
+	if blood_intensity != 0x30:
+		blood_info["blood_intensity"] = blood_intensity
+
+	blood_speed = binary_funcs.get_u8_at_address(f, 0x00038894)
+	if blood_speed != 0x05:
+		blood_info["blood_speed"] = blood_speed
+		
+	blood_intensity = binary_funcs.get_u8_at_address(f, 0x0003892C)
+	if blood_intensity != 0x18:
+		blood_info["blood_intensity"] = blood_intensity
+		
+	blood_spread_factor_x = binary_funcs.get_u8_at_address(f, 0x000389A8)
+	if blood_spread_factor_x != 0x07:
+		blood_info["blood_spread_factor_x"] = blood_spread_factor_x
+		
+	blood_spread_factor_y = binary_funcs.get_u8_at_address(f, 0x000389AB)
+	if blood_spread_factor_y != 0x07:
+		blood_info["blood_spread_factor_y"] = blood_spread_factor_y
+
+	return blood_info
+
+def read_gfx_info(f, is_patch_binary):
+	gfx_info = {}
+	
+	gfx_info["blood_info"] = read_gfx_blood_info(f, is_patch_binary)
+		
+	return gfx_info
+
 
 def read_audio_info(f, is_using_remapped_memory, is_patch_binary):
 	print("Scanning Audio Info...")
@@ -342,19 +395,20 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 	patch_data["meta_info"]["furr_support"] = False
 	
 	if is_extended_exe_size:
-		# FURR support
-		if not binary_funcs.is_nop_at_range(f, 0x000C1000, 0x000C2FFF):
-			print(f"FURR support enabled!")
-			patch_data["meta_info"]["furr_support"] = True
-			
-		# eSSe file loading enable
-		if not binary_funcs.is_nop_at_range(f, 0x000EFBA0, 0x000EFBC8) or \
-		not binary_funcs.is_nop_at_range(f, 0x000EFFE0, 0x000F0002):
-			print(f"eSSe file loading enabled!")
-			if not binary_funcs.is_nop_at_range(f, 0x000F0010, 0x000F0A3D):
-				patch_data["meta_info"]["esse_scripted_params"] = True
-			if not binary_funcs.is_nop_at_range(f, 0x000F5E10, 0x000F6113):
-				patch_data["meta_info"]["esse_multiple_mirrors"] = True
+		if not is_patch_binary:
+			# FURR support
+			if not binary_funcs.is_nop_at_range(f, 0x000C1000, 0x000C2FFF):
+				print(f"FURR support enabled!")
+				patch_data["meta_info"]["furr_support"] = True
+				
+			# eSSe file loading enable
+			if not binary_funcs.is_nop_at_range(f, 0x000EFBA0, 0x000EFBC8) or \
+			not binary_funcs.is_nop_at_range(f, 0x000EFFE0, 0x000F0002):
+				print(f"eSSe file loading enabled!")
+				if not binary_funcs.is_nop_at_range(f, 0x000F0010, 0x000F0A3D):
+					patch_data["meta_info"]["esse_scripted_params"] = True
+				if not binary_funcs.is_nop_at_range(f, 0x000F5E10, 0x000F6113):
+					patch_data["meta_info"]["esse_multiple_mirrors"] = True
 
 		# Show HP bar in Inventory.
 		show_hp_bar_in_inventory = False
@@ -362,7 +416,17 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 			show_hp_bar_in_inventory = True
 		print(f"Show HP bar in Inventory: {str(show_hp_bar_in_inventory)}")
 
-		if not is_patch_binary:
+		if is_patch_binary:
+			# Enable Ricochet SFX
+			has_gun_ricochet = flep_patch_check_if_has_gun_ricochet_effect(f)
+			if has_gun_ricochet:
+				patch_data["misc_info"]["enable_ricochet_sound_effect"] = True
+		else:
+
+			# Enable Ricochet SFX
+			if not binary_funcs.is_nop_at_range(f, 0x000EE422, 0x000EE43E):
+				patch_data["misc_info"]["enable_ricochet_sound_effect"] = True
+
 			# Enable Revolver Shell Casings
 			enable_revolver_shell_casings = False
 			if not binary_funcs.is_nop_at_range(f, 0x000EFEC0, 0x000EFEDC):
@@ -399,13 +463,9 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 				enable_rollingball_smash_and_kill = True
 				print(f"Enable Rollingball Smash and Kill: {str(enable_rollingball_smash_and_kill)}")
 
-		# Enable Ricochet SFX
-		if not binary_funcs.is_nop_at_range(f, 0x000EE422, 0x000EE43E):
-			patch_data["misc_info"]["enable_ricochet_sound_effect"] = True
-
-		# Enable Ricochet SFX
-		if not binary_funcs.is_nop_at_range(f, 0x000EE43F, 0x000EE9DE):
-			patch_data["misc_info"]["enable_standing_pushables"] = True
+			# Enable Standing Pushables
+			if not binary_funcs.is_nop_at_range(f, 0x000EE43F, 0x000EE9DE):
+				patch_data["misc_info"]["enable_standing_pushables"] = True
 
 	return patch_data
 
@@ -421,6 +481,8 @@ def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memo
 		patch_data["audio_info"] = read_audio_info(f, is_using_remapped_memory, is_patch_binary)
 		print("---")
 		patch_data["bar_info"] = read_bar_info(f, is_patch_binary)
+		print("---")
+		patch_data["gfx_info"] = read_gfx_info(f, is_patch_binary)
 		print("---")
 		read_enemy_info(f, is_patch_binary)
 		print("---")
