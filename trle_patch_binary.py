@@ -37,40 +37,42 @@ def read_enemy_info(f, is_patch_binary):
 
 		# Enemy Health Table
 		enemy_health_table = [
-			{"address": 0x0005B770, "name": "skeleton", "default": 0x0f00},
-			{"address": 0x0005BB30, "name": "baddy_1", "default": 0x1900},
-			{"address": 0x0005BD1D, "name": "baddy_2", "default": 0x2300},
-			{"address": 0x0005BEFF, "name": "big_scorpion", "default": 0x5000},
-			{"address": 0x0005BFE9, "name": "mummy", "default": 0x0f00},
-			{"address": 0x0005C087, "name": "knights_templer", "default": 0x0f00},
-			{"address": 0x0005C105, "name": "sphinx", "default": 0xe803},
-			{"address": 0x0005C167, "name": "set", "default": 0xf401},
-			{"address": 0x0005C21C, "name": "horseman", "default": 0x1900},
-			{"address": 0x0005C28D, "name": "hammerhead", "default": 0x2d00},
-			{"address": 0x0005C33D, "name": "crocodile", "default": 0x2400},
-			{"address": 0x0005C5FE, "name": "mutant", "default": 0x0f00},
-			{"address": 0x0005B99A, "name": "guide", "default": 0x00c0},
-			{"address": 0x0005C3F7, "name": "demigod_1", "default": 0xc800},
-			{"address": 0x0005C4A3, "name": "demigod_2", "default": 0xc800},
-			{"address": 0x0005C54F, "name": "demigod_3", "default": 0xc800},
-			{"address": 0x0005C69E, "name": "troops", "default": 0x2800},
-			{"address": 0x0005C74E, "name": "sas", "default": 0x2800},
-			{"address": 0x0005C7E9, "name": "harpy", "default": 0x3c00},
-			{"address": 0x0005C86C, "name": "wild_boar", "default": 0x2800},
-			{"address": 0x0005C911, "name": "dog", "default": 0x1000},
-			{"address": 0x0005C9A4, "name": "ahmet", "default": 0x5000},
-			{"address": 0x0005CA03, "name": "baboon", "default": 0x1e00},
-			{"address": 0x0005CB54, "name": "bat", "default": 0x0500},
-			{"address": 0x0005CBB9, "name": "big_beetle", "default": 0x1e00},
-			{"address": 0x0005B804, "name": "von_croy", "default": 0x0f00},
-			#{"address": 0x000B19FF, "name": "small_scorpion", "default": 0x0800},
+			{"address": 0x0005B770, "name": "skeleton", "default": 15},
+			{"address": 0x0005BB30, "name": "baddy_1", "default": 25},
+			{"address": 0x0005BD1D, "name": "baddy_2", "default": 35},
+			{"address": 0x0005BEFF, "name": "big_scorpion", "default": 80},
+			{"address": 0x0005BFE9, "name": "mummy", "default": 15},
+			{"address": 0x0005C087, "name": "knights_templer", "default": 15},
+			{"address": 0x0005C105, "name": "sphinx", "default": 1000},
+			{"address": 0x0005C167, "name": "set", "default": 500},
+			{"address": 0x0005C21C, "name": "horseman", "default": 25},
+			{"address": 0x0005C28D, "name": "hammerhead", "default": 45},
+			{"address": 0x0005C33D, "name": "crocodile", "default": 36},
+			{"address": 0x0005C5FE, "name": "mutant", "default": 15},
+			{"address": 0x0005B99A, "name": "guide", "default": -16384},
+			{"address": 0x0005C3F7, "name": "demigod_1", "default": 200},
+			{"address": 0x0005C4A3, "name": "demigod_2", "default": 200},
+			{"address": 0x0005C54F, "name": "demigod_3", "default": 200},
+			{"address": 0x0005C69E, "name": "troops", "default": 40},
+			{"address": 0x0005C74E, "name": "sas", "default": 40},
+			{"address": 0x0005C7E9, "name": "harpy", "default": 60},
+			{"address": 0x0005C86C, "name": "wild_boar", "default": 40},
+			{"address": 0x0005C911, "name": "dog", "default": 16},
+			{"address": 0x0005C9A4, "name": "ahmet", "default": 80},
+			{"address": 0x0005CA03, "name": "baboon", "default": 30},
+			{"address": 0x0005CB54, "name": "bat", "default": 5},
+			{"address": 0x0005CBB9, "name": "big_beetle", "default": 30},
+			{"address": 0x0005B804, "name": "von_croy", "default": 15},
+			#{"address": 0x000B19FF, "name": "small_scorpion", "default": 8},
 		]
 		
 		for row in enemy_health_table:
 			f.seek(row["address"])
+			enemy_name = row["name"]
 			enemy_health = int.from_bytes(f.read(2), byteorder='little', signed=True)
-			
-			print(row['name'] + ": " + str(enemy_health))
+			default_health = row["default"]
+			if (enemy_health != default_health):
+				print("Enemy {enemy_name} has modified health: {enemy_health}".format(enemy_name=enemy_name, enemy_health=enemy_health))
 			
 	return enemy_health_dictionary
 
