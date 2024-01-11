@@ -134,7 +134,7 @@ def detect_tomb4_game(path=None, exe_file=None):
 		patch_data = trle_patch_binary.read_binary_file(patches_path, True, False, True)
 
 	audio_info = patch_data["audio_info"]
-	bar_info = patch_data["bar_info"]
+	bars_info = patch_data["bars_info"]
 	gfx_info = patch_data["gfx_info"]
 	environment_info = patch_data["environment_info"]
 	misc_info = patch_data["misc_info"]
@@ -204,7 +204,7 @@ def detect_tomb4_game(path=None, exe_file=None):
 	global_level_info = {}
 
 	global_level_info["audio_info"] = audio_info
-	global_level_info["bar_info"] = bar_info
+	global_level_info["bars_info"] = bars_info
 	global_level_info["gfx_info"] = gfx_info
 	global_level_info["environment_info"] = environment_info
 	global_level_info["misc_info"] = misc_info
