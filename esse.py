@@ -335,8 +335,8 @@ def read_binary_file(file_path, patch_data):
                 environment_info = {}
                 
                 environment_info["fog_start_range"] = int(data["DF"])
-                environment_info["fog_end_range"] = int(data["DD"])
-                environment_info["far_view"] = int(data["HardClipRange"])
+                environment_info["fog_end_range"] = int(data["DFThresh"])
+                environment_info["far_view"] = int(data["DD"])
 
                 level_info["environment_info"] = environment_info
 
