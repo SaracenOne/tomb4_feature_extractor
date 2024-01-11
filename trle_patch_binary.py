@@ -146,124 +146,156 @@ def read_stat_info(f, is_patch_binary):
 
 	return stat_info
 
-def read_bar_info(f, is_patch_binary):
+def read_health_bar_info(f):
+	print("Scanning Health Bar Info...")
+	
+	health_bar_info = {}
+
+	# Health Bar
+	health_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5B0)
+	if health_bar_main_color['r'] != 255 or health_bar_main_color['g'] != 0 or health_bar_main_color['b'] != 0:
+		health_bar_info["main_color"] = health_bar_main_color
+
+	health_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5BA)
+	if health_bar_fade_color['r'] != 0 or health_bar_fade_color['g'] != 0 or health_bar_fade_color['b'] != 0:
+		health_bar_info["fade_color"] = health_bar_fade_color
+
+	health_bar_alternative_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5AB)
+	if health_bar_alternative_color['r'] != 0 or health_bar_alternative_color['g'] != 255 or health_bar_alternative_color['b'] != 0:
+		health_bar_info["alternative_color"] = {"r":0, "g":0, "b":0}
+
+		health_bar_info["alternative_color"]['r'] = min(health_bar_info["main_color"]['r'] + health_bar_info["alternative_color"]['r'], 255)
+		health_bar_info["alternative_color"]['g'] = min(health_bar_info["main_color"]['g'] + health_bar_info["alternative_color"]['g'], 255)
+		health_bar_info["alternative_color"]['b'] = min(health_bar_info["main_color"]['b'] + health_bar_info["alternative_color"]['b'], 255)
+
+
+	health_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B5C5)
+	if health_bar_width != 150:
+		health_bar_info["width"] = health_bar_width
+
+	health_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B5C3)
+	if health_bar_height != 12:
+		health_bar_info["height"] = health_bar_height
+
+	health_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B5CC, bytes([0x50, 0xD7]))
+	if health_bar_is_animated:
+		health_bar_info["is_animated"] = health_bar_is_animated
+
+	return health_bar_info
+
+def read_air_bar_info(f):
+	print("Scanning Air Bar Info...")
+	
+	air_bar_info = {}
+
+	# Air Bar
+	air_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B565)
+	if air_bar_main_color['r'] != 0 or air_bar_main_color['g'] != 0 or air_bar_main_color['b'] != 255:
+		air_bar_info["main_color"] = air_bar_main_color
+
+	air_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B56D)
+	if air_bar_fade_color['r'] != 0 or air_bar_fade_color['g'] != 0 or air_bar_fade_color['b'] != 0:
+		air_bar_info["fade_color"] = air_bar_fade_color
+
+	air_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B579)
+	if air_bar_width != 150:
+		air_bar_info["width"] = air_bar_width
+
+	air_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B575)
+	if air_bar_height != 12:
+		air_bar_info["height"] = air_bar_height
+		
+	air_bar_x_offset = binary_funcs.get_s16_at_address(f, 0x0007B57F)
+	if air_bar_x_offset != 490:
+		air_bar_info["x_offset"] = air_bar_x_offset
+		
+	air_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B587, bytes([0x95, 0xD7]))
+	if air_bar_is_animated:
+		air_bar_info["is_animated"] = air_bar_is_animated
+
+	return air_bar_info
+
+def read_sprint_bar_info(f):
+	print("Scanning Sprint Bar Info...")
+	
+	sprint_bar_info = {}
+
+	# Sprint Bar
+	sprint_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B523)
+	if sprint_bar_main_color['r'] != 0 or sprint_bar_main_color['g'] != 255 or sprint_bar_main_color['b'] != 0:
+		sprint_bar_info["main_color"] = sprint_bar_main_color
+
+	sprint_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B528)
+	if sprint_bar_fade_color['r'] != 0 or sprint_bar_fade_color['g'] != 0 or sprint_bar_fade_color['b'] != 0:
+		sprint_bar_info["fade_color"] = sprint_bar_fade_color
+
+	sprint_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B538)
+	if sprint_bar_width != 150:
+		sprint_bar_info["width"] = sprint_bar_width
+		
+		
+	sprint_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B536)
+	if sprint_bar_height != 12:
+		sprint_bar_info["height"] = sprint_bar_height
+
+	sprint_bar_x_offset = binary_funcs.get_s16_at_address(f, 0x0007B531)
+	if sprint_bar_x_offset != 490:
+		sprint_bar_info["x_offset"] = sprint_bar_x_offset
+
+	sprint_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B541, bytes([0xDB, 0xD7]))
+	if sprint_bar_is_animated:
+		sprint_bar_info["is_animated"] = sprint_bar_is_animated
+
+	return sprint_bar_info
+
+def read_loading_bar_info(f):
+	print("Scanning Loading Bar Info...")
+	
+	loading_bar_info = {}
+
+	# Loading Bar
+	loading_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B65A)
+	if loading_bar_main_color['r'] != 159 or loading_bar_main_color['g'] != 31 or loading_bar_main_color['b'] != 128:
+		loading_bar_info["main_color"] = loading_bar_main_color
+
+	loading_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B65F)
+	if loading_bar_fade_color['r'] != 0 or loading_bar_fade_color['g'] != 0 or loading_bar_fade_color['b'] != 0:
+		loading_bar_info["fade_color"] = loading_bar_fade_color
+
+	loading_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B693)
+	if loading_bar_width != 600:
+		loading_bar_info["width"] = loading_bar_width
+		
+	loading_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B68F)
+	if loading_bar_height != 15:
+		loading_bar_info["height"] = loading_bar_height
+
+	loading_bar_hidden = binary_funcs.is_nop_at_range(f, 0x0007B601, 0x0007B604)
+	if loading_bar_hidden:
+		loading_bar_info["hidden"] = loading_bar_hidden
+
+	return loading_bar_info
+
+def read_bars_info(f, is_patch_binary):
 	print("Scanning Bar Info...")
 
-	bar_info = {}
+	bars_info = {}
 
 	if not is_patch_binary:
-		# Health Bar
-		health_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5B0)
-		if health_bar_main_color['r'] != 255 or health_bar_main_color['g'] != 0 or health_bar_main_color['b'] != 0:
-			bar_info["health_bar_main_color"] = health_bar_main_color
-
-		health_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5BA)
-		if health_bar_fade_color['r'] != 0 or health_bar_fade_color['g'] != 0 or health_bar_fade_color['b'] != 0:
-			bar_info["health_bar_fade_color"] = health_bar_fade_color
-
-		health_bar_poison_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5AB)
-		if health_bar_poison_color['r'] != 0 or health_bar_poison_color['g'] != 255 or health_bar_poison_color['b'] != 0:
-			bar_info["health_bar_poison_color"] = {"r":0, "g":0, "b":0}
-
-			bar_info["health_bar_poison_color"]['r'] = min(bar_info["health_bar_main_color"]['r'] + bar_info["health_bar_poison_color"]['r'], 255)
-			bar_info["health_bar_poison_color"]['g'] = min(bar_info["health_bar_main_color"]['g'] + bar_info["health_bar_poison_color"]['g'], 255)
-			bar_info["health_bar_poison_color"]['b'] = min(bar_info["health_bar_main_color"]['b'] + bar_info["health_bar_poison_color"]['b'], 255)
-
-
-		health_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B5C5)
-		if health_bar_width != 150:
-			bar_info["health_bar_width"] = health_bar_width
-
-
-		health_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B5C3)
-		if health_bar_height != 12:
-			bar_info["health_bar_height"] = health_bar_height
-
-		health_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B5CC, bytes([0x50, 0xD7]))
-		if health_bar_is_animated:
-			bar_info["health_bar_is_animated"] = health_bar_is_animated
-
-		# Air Bar
-		air_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B565)
-		if air_bar_main_color['r'] != 0 or air_bar_main_color['g'] != 0 or air_bar_main_color['b'] != 255:
-			bar_info["air_bar_main_color"] = air_bar_main_color
-
-		air_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B56D)
-		if air_bar_fade_color['r'] != 0 or air_bar_fade_color['g'] != 0 or air_bar_fade_color['b'] != 0:
-			bar_info["air_bar_fade_color"] = air_bar_fade_color
-
-		air_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B579)
-		if air_bar_width != 150:
-			bar_info["air_bar_width"] = air_bar_width
-
-
-		air_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B575)
-		if air_bar_height != 12:
-			bar_info["air_bar_height"] = air_bar_height
-		
-		air_bar_x_offset = binary_funcs.get_s16_at_address(f, 0x0007B57F)
-		if air_bar_x_offset != 490:
-			bar_info["air_bar_x_offset"] = air_bar_x_offset
-		
-		air_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B587, bytes([0x95, 0xD7]))
-		if air_bar_is_animated:
-			bar_info["air_bar_is_animated"] = air_bar_is_animated
-		
-		# Sprint Bar
-		sprint_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B523)
-		if sprint_bar_main_color['r'] != 0 or sprint_bar_main_color['g'] != 255 or sprint_bar_main_color['b'] != 0:
-			bar_info["sprint_bar_main_color"] = sprint_bar_main_color
-
-
-		sprint_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B528)
-		if sprint_bar_fade_color['r'] != 0 or sprint_bar_fade_color['g'] != 0 or sprint_bar_fade_color['b'] != 0:
-			bar_info["sprint_bar_fade_color"] = sprint_bar_fade_color
-
-		sprint_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B538)
-		if sprint_bar_width != 150:
-			bar_info["sprint_bar_width"] = sprint_bar_width
-		
-		
-		sprint_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B536)
-		if sprint_bar_height != 12:
-			bar_info["sprint_bar_height"] = sprint_bar_height
-
-		sprint_bar_x_offset = binary_funcs.get_s16_at_address(f, 0x0007B531)
-		if sprint_bar_x_offset != 490:
-			bar_info["sprint_bar_x_offset"] = sprint_bar_x_offset
-
-		sprint_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B541, bytes([0xDB, 0xD7]))
-		if sprint_bar_is_animated:
-			bar_info["sprint_bar_is_animated"] = sprint_bar_is_animated
-		
-		# Loading Bar
-		loading_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B65A)
-		if loading_bar_main_color['r'] != 159 or loading_bar_main_color['g'] != 31 or loading_bar_main_color['b'] != 128:
-			bar_info["loading_bar_main_color"] = loading_bar_main_color
-
-
-		loading_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B65F)
-		if loading_bar_fade_color['r'] != 0 or loading_bar_fade_color['g'] != 0 or loading_bar_fade_color['b'] != 0:
-			bar_info["loading_bar_fade_color"] = loading_bar_fade_color
-
-		loading_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B693)
-		if loading_bar_width != 600:
-			bar_info["loading_bar_width"] = loading_bar_width
-		
-		loading_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B68F)
-		if loading_bar_height != 15:
-			bar_info["loading_bar_height"] = loading_bar_height
-
-		loading_bar_hidden = binary_funcs.is_nop_at_range(f, 0x0007B601, 0x0007B604)
-		if loading_bar_hidden:
-			bar_info["loading_bar_hidden"] = loading_bar_hidden
+		bars_info["health_bar"] = read_health_bar_info(f)
+		bars_info["air_bar"] = read_air_bar_info(f)
+		bars_info["sprint_bar"] = read_sprint_bar_info(f)
+		bars_info["loading_bar"] = read_loading_bar_info(f)
 
 		# Gradiant
 		is_gradiant_bar = check_if_using_gradiant_bar(f)
 		if is_gradiant_bar:
-			bar_info["is_gradiant_bar"] = is_gradiant_bar
+			bars_info["health_bar"]["is_gradiant_bar"] = is_gradiant_bar
+			bars_info["air_bar"]["is_gradiant_bar"] = is_gradiant_bar
+			bars_info["sprint_bar"]["is_gradiant_bar"] = is_gradiant_bar
+			bars_info["loading_bar"]["is_gradiant_bar"] = is_gradiant_bar
 
-	return bar_info
+	return bars_info
 
 def read_gfx_blood_info(f, is_patch_binary):
 	blood_info = {}
@@ -482,7 +514,7 @@ def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memo
 		print("---")
 		patch_data["audio_info"] = read_audio_info(f, is_using_remapped_memory, is_patch_binary)
 		print("---")
-		patch_data["bar_info"] = read_bar_info(f, is_patch_binary)
+		patch_data["bars_info"] = read_bars_info(f, is_patch_binary)
 		print("---")
 		patch_data["gfx_info"] = read_gfx_info(f, is_patch_binary)
 		print("---")
