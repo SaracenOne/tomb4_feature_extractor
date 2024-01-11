@@ -114,8 +114,8 @@ def read_misc_info(f, is_patch_binary):
 		print(f"Static Shatter Range: {str(lower_static_shatter_threshold)}-{str(upper_static_shatter_threshold)}.")
 
 		# Poison Dart Bugfix
-		poison_dart_bugfix = binary_funcs.compare_data_at_address(f, 0x00014044, bytes([0xF2]))
-		print(f"Poison Dart Bugfix: {poison_dart_bugfix}.")
+		if binary_funcs.compare_data_at_address(f, 0x00014044, bytes([0xF2])):
+			misc_info["darts_poison_fix"] = True
 
 		# Poison Dart Value
 		posion_dart_posion_value = binary_funcs.get_s16_at_address(f, 0x00014048)
