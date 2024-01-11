@@ -444,20 +444,20 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 			# Enable Custom Switch Animation OCB
 			enable_custom_switch_animation_ocb = False
 			if not binary_funcs.is_nop_at_range(f, 0x000EFBD0, 0x000EFD2D):
-				enable_custom_switch_animation_ocb = True
+				patch_data["misc_info"]["trep_switch_maker"] = True
 				print(f"Enable Custom Switch Animation OCB: {str(enable_custom_switch_animation_ocb)}")
 
-				switch_on_ocb1_anim = binary_funcs.get_s16_at_address(f, 0x000EFC6E) # 1
-				switch_off_ocb1_anim = binary_funcs.get_s16_at_address(f, 0x000EFD00) # 2
+				patch_data["misc_info"]["trep_switch_on_ocb_1_anim"] = binary_funcs.get_s16_at_address(f, 0x000EFC6E) # 1
+				patch_data["misc_info"]["trep_switch_off_ocb_1_anim"] = binary_funcs.get_s16_at_address(f, 0x000EFD00) # 2
 
-				switch_on_ocb2_anim = binary_funcs.get_s16_at_address(f, 0x000EFC00) # 3
-				switch_off_ocb2_anim = binary_funcs.get_s16_at_address(f, 0x000EFC96) # 4
+				patch_data["misc_info"]["trep_switch_on_ocb_2_anim"] = binary_funcs.get_s16_at_address(f, 0x000EFC00) # 3
+				patch_data["misc_info"]["trep_switch_off_ocb_2_anim"] = binary_funcs.get_s16_at_address(f, 0x000EFC96) # 4
 
-				switch_on_ocb5_anim = binary_funcs.get_s16_at_address(f, 0x000EFC42) # 5
-				switch_off_ocb5_anim = binary_funcs.get_s16_at_address(f, 0x000EFCD8) # 6
+				patch_data["misc_info"]["trep_switch_on_ocb_5_anim"] = binary_funcs.get_s16_at_address(f, 0x000EFC42) # 5
+				patch_data["misc_info"]["trep_switch_off_ocb_5_anim"] = binary_funcs.get_s16_at_address(f, 0x000EFCD8) # 6
 
-				switch_on_ocb6_anim = binary_funcs.get_s16_at_address(f, 0x000EFC56) # 7
-				switch_off_ocb6_anim = binary_funcs.get_s16_at_address(f, 0x000EFCEC) # 8
+				patch_data["misc_info"]["trep_switch_on_ocb_6_anim"] = binary_funcs.get_s16_at_address(f, 0x000EFC56) # 7
+				patch_data["misc_info"]["trep_switch_off_ocb_6_anim"] = binary_funcs.get_s16_at_address(f, 0x000EFCEC) # 8
 
 			# Enable Rollingball Smash and Kill
 			enable_rollingball_smash_and_kill = False

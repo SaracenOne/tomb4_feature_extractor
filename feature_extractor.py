@@ -196,6 +196,11 @@ def detect_tomb4_game(path=None, exe_file=None):
 		global_info["trng_statics_extended_ocb"] = False
 		global_info["trng_pushable_extended_ocb"] = False
 
+		if is_extended_exe_size:
+			with open(exe_path, 'rb') as f:
+				if not binary_funcs.is_nop_at_range(f, 0x000EF800, 0x000EF922):
+					global_info["trep_using_extended_saves"] = True
+
 	global_level_info = {}
 
 	global_level_info["audio_info"] = audio_info
