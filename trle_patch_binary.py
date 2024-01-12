@@ -80,7 +80,6 @@ def read_enemy_info(f, is_patch_binary):
 			{"address": 0x0005CB54, "name": "bat", "default": 5},
 			{"address": 0x0005CBB9, "name": "big_beetle", "default": 30},
 			{"address": 0x0005B804, "name": "von_croy", "default": 15},
-			#{"address": 0x000B19FF, "name": "small_scorpion", "default": 8},
 		]
 		
 		for row in enemy_health_table:
@@ -90,6 +89,14 @@ def read_enemy_info(f, is_patch_binary):
 			default_health = row["default"]
 			if (enemy_health != default_health):
 				print("Enemy {enemy_name} has modified health: {enemy_health}".format(enemy_name=enemy_name, enemy_health=enemy_health))
+
+
+		# Small Scorpion
+		if binary_funcs.compare_data_at_address(f, 0x0005BF66, bytes([0xE9, 0x8D, 0x5A, 0x05, 0x00, 0x90, 0x90])):
+			small_scorpion_health = binary_funcs.get_s16_at_address(f, 0x000B19FF)
+			samll_scorpion_name = "small_scorpion"
+			if small_scorpion_health != 8:
+				print("Enemy {enemy_name} has modified health: {enemy_health}".format(enemy_name=samll_scorpion_name, enemy_health=small_scorpion_health))
 			
 	return enemy_health_dictionary
 
