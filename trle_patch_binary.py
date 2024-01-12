@@ -45,41 +45,47 @@ def flep_patch_check_if_has_gun_ricochet_effect(f) -> bool:
 
 	return True
 
-def read_enemy_info(f, is_patch_binary):
-	print("Scanning Enemy Info...")
+T4PLUS_OBJECT_COUNT = 520
 
-	enemy_health_dictionary = {}
+def read_objects_info(f, is_patch_binary):
+	print("Scanning Objects Info...")
+
+	objects_info = {}
+
+	objects_info["object_customization"] = []
+	for i in range(0, T4PLUS_OBJECT_COUNT):
+		objects_info["object_customization"].append({})
 
 	if not is_patch_binary:
 
 		# Enemy Health Table
 		enemy_health_table = [
-			{"address": 0x0005B770, "name": "skeleton", "default": 15},
-			{"address": 0x0005BB30, "name": "baddy_1", "default": 25},
-			{"address": 0x0005BD1D, "name": "baddy_2", "default": 35},
-			{"address": 0x0005BEFF, "name": "big_scorpion", "default": 80},
-			{"address": 0x0005BFE9, "name": "mummy", "default": 15},
+			{"address": 0x0005B770, "name": "skeleton", "default": 15, "slot_number":35},
+			{"address": 0x0005BB30, "name": "baddy_1", "default": 25, "slot_number":41},
+			{"address": 0x0005BD1D, "name": "baddy_2", "default": 35, "slot_number":43},
+			{"address": 0x0005BEFF, "name": "big_scorpion", "default": 80, "slot_number":55},
+			{"address": 0x0005BFE9, "name": "mummy", "default": 15, "slot_number":47},
 			{"address": 0x0005C087, "name": "knights_templer", "default": 15},
-			{"address": 0x0005C105, "name": "sphinx", "default": 1000},
-			{"address": 0x0005C167, "name": "set", "default": 500},
-			{"address": 0x0005C21C, "name": "horseman", "default": 25},
-			{"address": 0x0005C28D, "name": "hammerhead", "default": 45},
-			{"address": 0x0005C33D, "name": "crocodile", "default": 36},
-			{"address": 0x0005C5FE, "name": "mutant", "default": 15},
-			{"address": 0x0005B99A, "name": "guide", "default": -16384},
-			{"address": 0x0005C3F7, "name": "demigod_1", "default": 200},
-			{"address": 0x0005C4A3, "name": "demigod_2", "default": 200},
-			{"address": 0x0005C54F, "name": "demigod_3", "default": 200},
-			{"address": 0x0005C69E, "name": "troops", "default": 40},
-			{"address": 0x0005C74E, "name": "sas", "default": 40},
-			{"address": 0x0005C7E9, "name": "harpy", "default": 60},
-			{"address": 0x0005C86C, "name": "wild_boar", "default": 40},
-			{"address": 0x0005C911, "name": "dog", "default": 16},
-			{"address": 0x0005C9A4, "name": "ahmet", "default": 80},
-			{"address": 0x0005CA03, "name": "baboon", "default": 30},
-			{"address": 0x0005CB54, "name": "bat", "default": 5},
-			{"address": 0x0005CBB9, "name": "big_beetle", "default": 30},
-			{"address": 0x0005B804, "name": "von_croy", "default": 15},
+			{"address": 0x0005C105, "name": "sphinx", "default": 1000, "slot_number":49},
+			{"address": 0x0005C167, "name": "set", "default": 500, "slot_number":45},
+			{"address": 0x0005C21C, "name": "horseman", "default": 25, "slot_number":53},
+			{"address": 0x0005C28D, "name": "hammerhead", "default": 45, "slot_number":93},
+			{"address": 0x0005C33D, "name": "crocodile", "default": 36, "slot_number":51},
+			{"address": 0x0005C5FE, "name": "mutant", "default": 15, "slot_number":63},
+			{"address": 0x0005B99A, "name": "guide", "default": -16384, "slot_number":37},
+			{"address": 0x0005C3F7, "name": "demigod_1", "default": 200, "slot_number":77},
+			{"address": 0x0005C4A3, "name": "demigod_2", "default": 200, "slot_number":79},
+			{"address": 0x0005C54F, "name": "demigod_3", "default": 200, "slot_number":81},
+			{"address": 0x0005C69E, "name": "troops", "default": 40, "slot_number":59},
+			{"address": 0x0005C74E, "name": "sas", "default": 40, "slot_number":95},
+			{"address": 0x0005C7E9, "name": "harpy", "default": 60, "slot_number":75},
+			{"address": 0x0005C86C, "name": "wild_boar", "default": 40, "slot_number":73},
+			{"address": 0x0005C911, "name": "dog", "default": 16, "slot_number":91},
+			{"address": 0x0005C9A4, "name": "ahmet", "default": 80, "slot_number":102},
+			{"address": 0x0005CA03, "name": "baboon", "default": 30, "slot_number":67},
+			{"address": 0x0005CB54, "name": "bat", "default": 5, "slot_number":90},
+			{"address": 0x0005CBB9, "name": "big_beetle", "default": 30, "slot_number":84},
+			{"address": 0x0005B804, "name": "von_croy", "default": 15, "slot_number":39},
 		]
 		
 		for row in enemy_health_table:
@@ -89,6 +95,7 @@ def read_enemy_info(f, is_patch_binary):
 			default_health = row["default"]
 			if (enemy_health != default_health):
 				print("Enemy {enemy_name} has modified health: {enemy_health}".format(enemy_name=enemy_name, enemy_health=enemy_health))
+				objects_info["object_customization"][row["slot_number"]]["hit_points"] = enemy_health
 
 
 		# Small Scorpion
@@ -97,8 +104,73 @@ def read_enemy_info(f, is_patch_binary):
 			samll_scorpion_name = "small_scorpion"
 			if small_scorpion_health != 8:
 				print("Enemy {enemy_name} has modified health: {enemy_health}".format(enemy_name=samll_scorpion_name, enemy_health=small_scorpion_health))
-			
-	return enemy_health_dictionary
+				objects_info["object_customization"][106]["hit_points"] = enemy_health
+
+	if not is_patch_binary:
+		enemy_damage_table = [
+			{"address": 0x0000C9FE, "name": "baddy_uzi", "default": 15, "size":1, "invert_sign":False, "slot_numbers":[41, 43], "damage_id":2},
+			{"address": 0x0000D803, "name": "sas_machinegun", "default": 15, "size":1, "invert_sign":False, "slot_numbers":[95], "damage_id":1},
+			{"address": 0x0003F200, "name": "turret", "default": 5, "size":1, "invert_sign":False, "slot_numbers":[162], "damage_id":1},
+			{"address": 0x00002CD5, "name": "bat", "default": 2, "size":1, "invert_sign":True, "slot_numbers":[90], "damage_id":2},
+			#{"address": 0x????????, "name": "crocodile_uw", "default": 120, "size":1, "invert_sign":True, "slot_numbers":[51], "damage_id":1},
+			{"address": 0x000033C0, "name": "crocodile_land", "default": 120, "size":1, "invert_sign":True, "slot_numbers":[51], "damage_id":1},
+			{"address": 0x00003BAF, "name": "locust", "default": 3, "size":1, "invert_sign":True, "slot_numbers":[107], "damage_id":1},
+			{"address": 0x0000AD3E, "name": "mummy", "default": 100, "size":1, "invert_sign":True, "slot_numbers":[47], "damage_id":1},
+			{"address": 0x000031C8, "name": "baddy_sword_a", "default": 120, "size":1, "invert_sign":True, "slot_numbers":[41, 43], "damage_id":1},
+			{"address": 0x0000C4CC, "name": "baddy_sword_b", "default": 120, "size":1, "invert_sign":True, "slot_numbers":[41, 43], "damage_id":1},
+			{"address": 0x0000F18C, "name": "small_scorpion", "default": 20, "size":1, "invert_sign":True, "slot_numbers":[106], "damage_id":1},
+			{"address": 0x00005DA6, "name": "dog", "default": 10, "size":1, "invert_sign":True, "slot_numbers":[91], "damage_id":1},
+			{"address": 0x00012368, "name": "skeleton_attack_1", "default": 80, "size":1, "invert_sign":True, "slot_numbers":[35], "damage_id":1},
+			{"address": 0x0001257E, "name": "skeleton_attack_2", "default": 80, "size":1, "invert_sign":True, "slot_numbers":[35], "damage_id":1},
+			{"address": 0x0001C0C6, "name": "wild_boar", "default": 30, "size":1, "invert_sign":True, "slot_numbers":[73], "damage_id":1},
+			{"address": 0x00007E44, "name": "harpy", "default": 10, "size":1, "invert_sign":True, "slot_numbers":[75], "damage_id":1},
+			{"address": 0x0000EDA8, "name": "scorpion", "default": 120, "size":1, "invert_sign":True, "slot_numbers":[55], "damage_id":1},
+			{"address": 0x0000718F, "name": "hammerhead", "default": 120, "size":1, "invert_sign":True, "slot_numbers":[93], "damage_id":1},
+			{"address": 0x000133B1, "name": "knights_templar", "default": 120, "size":1, "invert_sign":True, "slot_numbers":[61], "damage_id":1},
+			{"address": 0x0000E10B, "name": "big_beetle", "default": 50, "size":1, "invert_sign":True, "slot_numbers":[84], "damage_id":1},
+			{"address": 0x00012D2E, "name": "sphinx", "default": 200, "size":2, "invert_sign":True, "slot_numbers":[49], "damage_id":1},
+			{"address": 0x000110BC, "name": "set_attack_1", "default": 200, "size":2, "invert_sign":True, "slot_numbers":[45], "damage_id":1},
+			{"address": 0x00011285, "name": "set_attack_2", "default": 250, "size":2, "invert_sign":True, "slot_numbers":[45], "damage_id":2},
+		]
+
+		for row in enemy_damage_table:
+			f.seek(row["address"])
+			damage_name = row["name"]
+			damage_value = 0
+			if row["size"] == 1:
+				damage_value = int.from_bytes(f.read(1), byteorder='little', signed=True)
+			elif row["size"] == 2:
+				damage_value = int.from_bytes(f.read(2), byteorder='little', signed=True)
+
+			if row["invert_sign"]:
+				damage_value = -damage_value
+
+			default_damage = row["default"]
+			if (damage_value != default_damage):
+				print("Damage {damage_name} has modified value: {damage_value}".format(damage_name=damage_name, damage_value=damage_value))
+				for slot_number in row["slot_numbers"]:
+					match row["damage_id"]:
+						case 1:
+							objects_info["object_customization"][slot_number]["damage_1"] = damage_value
+						case 2:
+							objects_info["object_customization"][slot_number]["damage_2"] = damage_value
+						case 3:
+							objects_info["object_customization"][slot_number]["damage_3"] = damage_value
+
+		beetle_dispertion = binary_funcs.get_s16_at_address(f, 0x0000E3EC)
+		if beetle_dispertion != 1024:
+				print("Beetle Dispertion {beetle_dispertion}".format(beetle_dispertion=beetle_dispertion))
+
+		magical_attack_divider = binary_funcs.get_s8_at_address(f, 0x0003A7AD)
+		if magical_attack_divider != 2:
+				print("Magical Attack Divider: {magical_attack_divider}".format(magical_attack_divider=magical_attack_divider))
+
+
+		disable_mutant_locust_attack = True if binary_funcs.get_u8_at_address(f, 0x000042CC) != 0x7F else False
+		if disable_mutant_locust_attack:
+			print("Mutant Locust Attack disabled")
+
+	return objects_info
 
 def read_misc_info(f, is_patch_binary):
 	print("Scanning Misc Info...")
@@ -544,7 +616,7 @@ def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memo
 		print("---")
 		patch_data["gfx_info"] = read_gfx_info(f, is_patch_binary)
 		print("---")
-		read_enemy_info(f, is_patch_binary)
+		patch_data["objects_info"] = read_objects_info(f, is_patch_binary)
 		print("---")
 		patch_data["environment_info"] = read_environment_info(f, is_patch_binary)
 		print("---")

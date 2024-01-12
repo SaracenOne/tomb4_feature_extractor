@@ -141,6 +141,7 @@ def detect_tomb4_game(path=None, exe_file=None):
 	stat_info = patch_data["stat_info"]
 	meta_info = patch_data["meta_info"]
 	lara_info = patch_data["lara_info"]
+	objects_info = patch_data["objects_info"]
 
 	print("Scanning for Leikkuri modifications in exe file...")
 	font_info = leikkuri.read_exe_file(exe_path)
@@ -212,6 +213,7 @@ def detect_tomb4_game(path=None, exe_file=None):
 	global_level_info["stat_info"] = stat_info
 	global_level_info["font_info"] = font_info
 	global_level_info["lara_info"] = lara_info
+	global_level_info["objects_info"] = objects_info
 
 	#
 	output_mod_config["global_info"] = global_info
