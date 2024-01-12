@@ -126,6 +126,12 @@ def read_misc_info(f, is_patch_binary):
 		if not binary_funcs.is_nop_at_range(f, 0x0002B7C1, 0x0002B7CB) and not binary_funcs.is_nop_at_range(f, 0x0002B845, 0x0002B84F):
 			fix_holsters = True
 			print(f"Fix Holsters: {str(fix_holsters)}.")
+
+		# Always Exit From Statistics Screen
+		always_exit_from_statistics_screen = True if binary_funcs.get_u8_at_address(f, 0x0007AD9B) == 0xC6 and \
+		binary_funcs.compare_data_at_address(f, 0x0007ADA2, bytes([0xE8, 0x99, 0x36, 0xFE, 0xFF, 0x83, 0xC4, 0x0C, 0xB0, 0x01, 0xC3])) else False
+		if always_exit_from_statistics_screen:
+			misc_info["always_exit_from_statistics_screen"] = True
 		
 	# Disable Motorbike headlights
 	disable_motorbike_headlights = True if binary_funcs.get_u8_at_address(f, 0x000639F0) == 0xC3 else False
