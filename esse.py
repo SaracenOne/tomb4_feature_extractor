@@ -1,5 +1,6 @@
 import os
 import struct
+import data_tables
 
 def read_data(f, d, key_name, base_offset, offset, max_block_size, type, string_width, default_value):
     data = None
@@ -209,32 +210,32 @@ def read_binary_file(file_path, patch_data):
             data = read_data(f, data, 'SwimSpeed', base_offset, 756, level_block_size, "WORD", 0, 200)
 
             # Enemy HP
-            data = read_data(f, data, 'SkeletonHP', base_offset, 758, level_block_size, "WORD", 0, 15)
-            data = read_data(f, data, 'Baddy1HP', base_offset, 760, level_block_size, "WORD", 0, 25)
-            data = read_data(f, data, 'Baddy2HP', base_offset, 762, level_block_size, "WORD", 0, 35)
-            data = read_data(f, data, 'ScorpionHP', base_offset, 764, level_block_size, "WORD", 0, 80)
-            data = read_data(f, data, 'MummyHP', base_offset, 766, level_block_size, "WORD", 0, 15)
-            data = read_data(f, data, 'KnightTemplarHP', base_offset, 768, level_block_size, "WORD", 0, 15)
-            data = read_data(f, data, 'SphinxHP', base_offset, 770, level_block_size, "WORD", 0, 1000)
-            data = read_data(f, data, 'SethHP', base_offset, 772, level_block_size, "WORD", 0, 500)
-            data = read_data(f, data, 'HorsemenHP', base_offset, 774, level_block_size, "WORD", 0, 25)
-            data = read_data(f, data, 'HammerheadHP', base_offset, 776, level_block_size, "WORD", 0, 45)
-            data = read_data(f, data, 'CrocHP', base_offset, 778, level_block_size, "WORD", 0, 36)
-            data = read_data(f, data, 'MutantHP', base_offset, 780, level_block_size, "WORD", 0, 15)
-            data = read_data(f, data, 'GuideHP', base_offset, 782, level_block_size, "WORD", 0, -16384)
-            data = read_data(f, data, 'Demigod1HP', base_offset, 784, level_block_size, "WORD", 0, 200)
-            data = read_data(f, data, 'Demigod2HP', base_offset, 786, level_block_size, "WORD", 0, 200)
-            data = read_data(f, data, 'Demigod3HP', base_offset, 788, level_block_size, "WORD", 0, 200)
-            data = read_data(f, data, 'TroopsHP', base_offset, 790, level_block_size, "WORD", 0, 40)
-            data = read_data(f, data, 'SASHP', base_offset, 792, level_block_size, "WORD", 0, 40)
-            data = read_data(f, data, 'HarpyHP', base_offset, 794, level_block_size, "WORD", 0, 60)
-            data = read_data(f, data, 'WildBoarHP', base_offset, 796, level_block_size, "WORD", 0, 40)
-            data = read_data(f, data, 'DogHP', base_offset, 798, level_block_size, "WORD", 0, 16)
-            data = read_data(f, data, 'AhmetHP', base_offset, 800, level_block_size, "WORD", 0, 80)
-            data = read_data(f, data, 'BaboonHP', base_offset, 802, level_block_size, "WORD", 0, 30)
-            data = read_data(f, data, 'BatHP', base_offset, 804, level_block_size, "WORD", 0, 5)
-            data = read_data(f, data, 'BigBeetleHP', base_offset, 806, level_block_size, "WORD", 0, 30)
-            data = read_data(f, data, 'VonCroyHP', base_offset, 808, level_block_size, "WORD", 0, 15)
+            data = read_data(f, data, 'SkeletonHP', base_offset, 758, level_block_size, "WORDI", 0, 15)
+            data = read_data(f, data, 'Baddy1HP', base_offset, 760, level_block_size, "WORDI", 0, 25)
+            data = read_data(f, data, 'Baddy2HP', base_offset, 762, level_block_size, "WORDI", 0, 35)
+            data = read_data(f, data, 'ScorpionHP', base_offset, 764, level_block_size, "WORDI", 0, 80)
+            data = read_data(f, data, 'MummyHP', base_offset, 766, level_block_size, "WORDI", 0, 15)
+            data = read_data(f, data, 'KnightTemplarHP', base_offset, 768, level_block_size, "WORDI", 0, 15)
+            data = read_data(f, data, 'SphinxHP', base_offset, 770, level_block_size, "WORDI", 0, 1000)
+            data = read_data(f, data, 'SethHP', base_offset, 772, level_block_size, "WORDI", 0, 500)
+            data = read_data(f, data, 'HorsemenHP', base_offset, 774, level_block_size, "WORDI", 0, 25)
+            data = read_data(f, data, 'HammerheadHP', base_offset, 776, level_block_size, "WORDI", 0, 45)
+            data = read_data(f, data, 'CrocHP', base_offset, 778, level_block_size, "WORDI", 0, 36)
+            data = read_data(f, data, 'MutantHP', base_offset, 780, level_block_size, "WORDI", 0, 15)
+            data = read_data(f, data, 'GuideHP', base_offset, 782, level_block_size, "WORDI", 0, -16384)
+            data = read_data(f, data, 'Demigod1HP', base_offset, 784, level_block_size, "WORDI", 0, 200)
+            data = read_data(f, data, 'Demigod2HP', base_offset, 786, level_block_size, "WORDI", 0, 200)
+            data = read_data(f, data, 'Demigod3HP', base_offset, 788, level_block_size, "WORDI", 0, 200)
+            data = read_data(f, data, 'TroopsHP', base_offset, 790, level_block_size, "WORDI", 0, 40)
+            data = read_data(f, data, 'SASHP', base_offset, 792, level_block_size, "WORDI", 0, 40)
+            data = read_data(f, data, 'HarpyHP', base_offset, 794, level_block_size, "WORDI", 0, 60)
+            data = read_data(f, data, 'WildBoarHP', base_offset, 796, level_block_size, "WORDI", 0, 40)
+            data = read_data(f, data, 'DogHP', base_offset, 798, level_block_size, "WORDI", 0, 16)
+            data = read_data(f, data, 'AhmetHP', base_offset, 800, level_block_size, "WORDI", 0, 80)
+            data = read_data(f, data, 'BaboonHP', base_offset, 802, level_block_size, "WORDI", 0, 30)
+            data = read_data(f, data, 'BatHP', base_offset, 804, level_block_size, "WORDI", 0, 5)
+            data = read_data(f, data, 'BigBeetleHP', base_offset, 806, level_block_size, "WORDI", 0, 30)
+            data = read_data(f, data, 'VonCroyHP', base_offset, 808, level_block_size, "WORDI", 0, 15)
 
             # Enemy Damage
             data = read_data(f, data, 'BaddyUZIDmg', base_offset, 810, level_block_size, "BYTE", 0, 15)
@@ -333,12 +334,25 @@ def read_binary_file(file_path, patch_data):
 
             if patch_data["meta_info"]["esse_scripted_params"] == True:
                 environment_info = {}
+                objects_info = {}
+
+                objects_info["object_customization"] = []
+                for j in range(0, data_tables.T4PLUS_OBJECT_COUNT):
+                    object_customization = {}
+                    objects_info["object_customization"].append(object_customization)
                 
                 environment_info["fog_start_range"] = int(data["DF"])
                 environment_info["fog_end_range"] = int(data["DFThresh"])
                 environment_info["far_view"] = int(data["DD"])
 
+                for row in data_tables.enemy_health_table:
+                    if row["name"] in data:
+                        enemy_hp = data[row["name"]]
+                        slot_number = row["slot_number"]
+                        objects_info["object_customization"][slot_number] = {"hit_points":enemy_hp}
+
                 level_info["environment_info"] = environment_info
+                level_info["objects_info"] = objects_info
 
             level_array.append(level_info)
 
