@@ -534,6 +534,11 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 			if not binary_funcs.is_nop_at_range(f, 0x000EE43F, 0x000EE9DE):
 				patch_data["misc_info"]["enable_standing_pushables"] = True
 
+			# Lara Crawlspace Jump
+			if not binary_funcs.is_nop_at_range(f, 0x000EEA72, 0x000EEC3B):
+				patch_data["lara_info"]["crawlspace_jump_animation"] = binary_funcs.get_s16_at_address(f, 0x000EEBB8)
+				patch_data["lara_info"]["crawlspace_jump_pit_deepness_threshold"] = binary_funcs.get_s16_at_address(f, 0x000EEBAB)
+
 			# Lara Ledge Climb Control
 			if not binary_funcs.is_nop_at_range(f, 0x000EF1E0, 0x000EF22A):
 				patch_data["lara_info"]["ledge_to_jump_state"] = binary_funcs.get_s16_at_address(f, 0x000EF1FC)
