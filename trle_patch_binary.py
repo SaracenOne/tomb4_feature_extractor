@@ -436,7 +436,6 @@ def read_environment_info(f, is_patch_binary):
 		if (hard_clipping_range_first_value == hard_clipping_range_second_value):
 			if hard_clipping_range_first_value != 20480:
 				print(f"Hard Clipping Range: " + str(hard_clipping_range_first_value))
-				environment_info["far_view"] = int(hard_clipping_range_first_value)
 		else:
 			print(f"Hard Clipping Range: MISMATCH.")
 
