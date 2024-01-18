@@ -171,6 +171,39 @@ def read_stat_info(f, is_patch_binary):
 		if secret_count != 70:
 			stat_info["secret_count"] = secret_count
 
+		stat_info["equipment_modifiers"] = []
+		remove_pistols = binary_funcs.is_nop_at_range(f, 0x0005B426, 0x0005B42B)
+		if remove_pistols:
+			stat_info["equipment_modifiers"].append({"object_id":349, "amount":0})
+
+		has_binoculars = True if binary_funcs.get_u8_at_address(f, 0x0005B455) > 0 else False
+		if not has_binoculars:
+			stat_info["equipment_modifiers"].append({"object_id":371, "amount":0})
+
+		has_crowbar = binary_funcs.is_nop_at_range(f, 0x0005B475, 0x0005B476)
+		if has_crowbar:
+			stat_info["equipment_modifiers"].append({"object_id":246, "amount":1})
+
+		large_medipack_count = binary_funcs.get_s16_at_address(f, 0x0005B469)
+		if large_medipack_count != 1:
+			stat_info["equipment_modifiers"].append({"object_id":368, "amount":large_medipack_count})
+
+		small_medipack_count = 3
+		flare_count = 3
+		if binary_funcs.get_u8_at_address(f, 0x0005B443) == 0xB4:
+			small_medipack_count = binary_funcs.get_u8_at_address(f, 0x0005B446) 
+			flare_count = binary_funcs.get_u8_at_address(f, 0x0005B444)
+		else:
+			small_medipack_count = binary_funcs.get_s32_at_address(f, 0x0005B444)
+			flare_count = binary_funcs.get_s32_at_address(f, 0x0005B444)
+
+		if small_medipack_count != 3:
+			stat_info["equipment_modifiers"].append({"object_id":369, "amount":small_medipack_count})
+		if flare_count != 3:
+			stat_info["equipment_modifiers"].append({"object_id":373, "amount":flare_count})
+
+
+
 	return stat_info
 
 def read_health_bar_info(f):
