@@ -129,6 +129,10 @@ def read_misc_info(f, is_patch_binary):
 		if binary_funcs.is_nop_at_range(f, 0x000160ED, 0x000160EE):
 			misc_info["lara_impales_on_spikes"] = True
 
+		legend_timer = binary_funcs.get_u8_at_address(f, 0x00050F59)
+		if legend_timer != 150:
+			misc_info["legend_timer"] = legend_timer
+
 		# Static Shatter Range
 		lower_static_shatter_threshold = binary_funcs.get_u16_at_address(f, 0x0004d013)
 		upper_static_shatter_threshold = binary_funcs.get_u16_at_address(f, 0x0004d019)
@@ -509,6 +513,10 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 					patch_data["meta_info"]["esse_scripted_params"] = True
 				if not binary_funcs.is_nop_at_range(f, 0x000F5E10, 0x000F6113):
 					patch_data["meta_info"]["esse_multiple_mirrors"] = True
+
+		# Draw Legend on Flybys
+		if not binary_funcs.is_nop_at_range(f, 0x000EF7C0, 0x000EF7F3):
+			patch_data["misc_info"]["draw_legend_on_flyby"] = True
 
 		# Show HP bar in Inventory.
 		show_hp_bar_in_inventory = False
