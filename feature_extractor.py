@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import re
 import pefile
+import configparser
 import json
 
 import binary_funcs
@@ -71,6 +72,36 @@ def detect_next_generation_dll(path):
 	version = get_pe_file_version(ng_dll_path)
 
 	return version
+
+def parse_ini_file(file_path, global_info):
+	# Create a configparser object
+	config = configparser.ConfigParser()
+
+	# Read the ini file
+	config.read(file_path)
+
+	# Print all sections
+	for section in config.sections():
+		if section == "Level Information":
+			for key in config[section]:
+				if key == "name":
+					global_info["level_name"] = config[section][key]
+				elif key == "author":
+					global_info["author"] = config[section][key]
+				elif key == "release_date":
+					global_info["release_date"] = config[section][key]
+
+	return global_info
+				
+def detect_metadata_ini_file(path, global_info):
+	metadata_ini_path = os.path.join(path, "metadata.ini")
+
+	# Detect if the path is valid.
+	if not os.path.exists(metadata_ini_path):
+		print(f"No metadata.ini at {metadata_ini_path}. Returning.")
+		return global_info
+	
+	return parse_ini_file(metadata_ini_path, global_info)
 
 def detect_tomb4_game(path=None, exe_file=None):
 	while path is None or path == "":
@@ -176,7 +207,8 @@ def detect_tomb4_game(path=None, exe_file=None):
 
 	output_mod_config = {}
 
-	global_info = {}
+	global_info = detect_metadata_ini_file(path, {})
+
 	global_info["trng_version_major"] = 0
 	global_info["trng_version_minor"] = 0
 	global_info["trng_version_maintainence"] = 0
