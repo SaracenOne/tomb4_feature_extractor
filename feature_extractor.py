@@ -12,6 +12,9 @@ import esse
 import leikkuri
 import furr_syntax
 
+# Increment this every time we make a change to the manifest format which is incompatible with previous versions.
+MANIFEST_VERSION = 0
+
 EXE_DEFAULT_SIZE = 790528
 EXE_TREP_EXTENDED_SIZE = 1314816
 
@@ -90,6 +93,8 @@ def parse_ini_file(file_path, global_info):
 					global_info["author"] = config[section][key]
 				elif key == "release_date":
 					global_info["release_date"] = config[section][key]
+				elif key == "user_data_dir_name":
+					global_info["user_data_dir_name"] = config[section][key]
 
 	return global_info
 				
@@ -207,7 +212,10 @@ def detect_tomb4_game(path=None, exe_file=None):
 
 	output_mod_config = {}
 
-	global_info = detect_metadata_ini_file(path, {})
+	global_info = {}
+	global_info["manifest_compatibility_version"] = MANIFEST_VERSION
+
+	global_info = detect_metadata_ini_file(path, global_info)
 
 	global_info["trng_version_major"] = 0
 	global_info["trng_version_minor"] = 0
