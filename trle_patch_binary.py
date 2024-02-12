@@ -390,10 +390,79 @@ def read_gfx_blood_info(f, is_patch_binary):
 
 	return blood_info
 
+def read_vapor_customization(f, jump_address, index) -> dict:
+	vapor_info = {}
+	vapor_info["start_color"] = binary_funcs.read_rgb(f)
+	vapor_info["start_time"] = binary_funcs.read_s8(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["end_color"] = binary_funcs.read_rgb(f)
+	vapor_info["end_time"] = binary_funcs.read_s8(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["blending_mode"] = binary_funcs.read_s8(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["lifetime"] = binary_funcs.read_s8(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["size_variation_lower_byte"] = binary_funcs.read_u8(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["size_variation_higher_byte"] = binary_funcs.read_u8(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["size_multiplier"] = binary_funcs.read_u8(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["rotation"] = binary_funcs.read_u8(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["flags"] = binary_funcs.read_u16(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["sprite_id"] = binary_funcs.read_u8(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["horizontal_speed"] = binary_funcs.read_s8(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["horizontal_curve"] = binary_funcs.read_s8(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["vertical_speed_1"] = binary_funcs.read_s32(f)
+	binary_funcs.skip_bytes(f, 1)
+	vapor_info["vertical_speed_2"] = binary_funcs.read_s8(f)
+
+	last_position = f.tell()
+
+	f.seek(jump_address + (index * 4))
+	vapor_info["spawn_interval"] = binary_funcs.read_s8(f)
+	f.seek(last_position + 10)
+
+	return vapor_info
+
+def read_gfx_vapor_info(f, is_patch_binary):
+	vapor_info = {}
+
+	if is_patch_binary:
+		extended_vapor_emitter = not binary_funcs.is_nop_at_range(f, 0x000C53E0, 0x000C5C83)
+		if extended_vapor_emitter:
+			f.seek(0x000C5B21)
+			steam_emitter = read_vapor_customization(f, 0x000C5498, 0)
+			steam_emitters_for_ocb = []
+			for i in range(0, 15):
+				steam_emitters_for_ocb.append(steam_emitter)
+			vapor_info["steam_emitters_for_ocb"] = steam_emitters_for_ocb
+
+			f.seek(0x000C54E0)
+			white_smoke_emitters_for_ocb = []
+			for i in range(0, 15):
+				white_smoke_emitters_for_ocb.append(read_vapor_customization(f, 0x000C5408, i))
+			vapor_info["white_smoke_emitters_for_ocb"] = white_smoke_emitters_for_ocb
+
+			f.seek(0x000C5805)
+			black_smoke_emitters_for_ocb = []
+			for i in range(0, 15):
+				black_smoke_emitters_for_ocb.append(read_vapor_customization(f, 0x000C545C, i))
+			vapor_info["black_smoke_emitters_for_ocb"] = black_smoke_emitters_for_ocb
+
+	return vapor_info
+
+
 def read_gfx_info(f, is_patch_binary):
 	gfx_info = {}
 	
 	gfx_info["blood_info"] = read_gfx_blood_info(f, is_patch_binary)
+	gfx_info["vapor_info"] = read_gfx_vapor_info(f, is_patch_binary)
 		
 	return gfx_info
 
