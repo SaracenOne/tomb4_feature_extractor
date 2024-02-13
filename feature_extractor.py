@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import os
 import argparse
 import hashlib
@@ -85,26 +87,70 @@ def parse_ini_file(file_path, global_info):
 
 	# Print all sections
 	for section in config.sections():
-		if section == "Level Information":
+		if section == "Game Information":
 			for key in config[section]:
-				if key == "name":
-					global_info["level_name"] = config[section][key]
-				elif key == "author":
-					global_info["author"] = config[section][key]
+				if key == "game_name":
+					global_info["game_name"] = config[section][key]
+				elif key == "authors":
+					global_info["authors"] = config[section][key]
 				elif key == "release_date":
 					global_info["release_date"] = config[section][key]
-				elif key == "user_data_dir_name":
-					global_info["user_data_dir_name"] = config[section][key]
+				elif key == "game_user_dir_name":
+					global_info["game_user_dir_name"] = config[section][key]
 
 	return global_info
-				
+
+def validate_date(date_input):
+    for fmt in ('%d/%m/%Y', '%d-%m-%Y', '%Y-%m-%d', '%m/%d/%Y'):
+        try:
+            return datetime.strptime(date_input, fmt).strftime('%d/%m/%Y')
+        except ValueError:
+            pass
+    raise ValueError('No valid date format found')
+
 def detect_metadata_ini_file(path, global_info):
 	metadata_ini_path = os.path.join(path, "metadata.ini")
 
 	# Detect if the path is valid.
 	if not os.path.exists(metadata_ini_path):
-		print(f"No metadata.ini at {metadata_ini_path}. Returning.")
-		return global_info
+		# Create a configparser object
+		config = configparser.ConfigParser()
+
+
+		# Prompt user for input
+		while True:
+			game_name = input("Enter game name: ")
+			if len(game_name) > 0:
+				break
+		while True:
+			authors = input("Enter author(s): ")
+			if len(authors) > 0:
+				break
+		while True:
+			release_date = input("Enter release date (dd/mm/yyyy): ")
+			try:
+				release_date = validate_date(release_date)
+				break
+			except ValueError:
+				print("Invalid date format. Please enter a valid date (dd/mm/yyyy).")
+		while True:
+			game_user_dir_name = input("Enter game user directory name: ")
+			if len(game_user_dir_name) > 0:
+				break
+
+		# Add the information to the 'Game Information' section
+		config['Game Information'] = {
+			'game_name': game_name,
+			'authors': authors,
+			'release_date': release_date,
+			'game_user_dir_name': game_user_dir_name
+		}
+
+		# Write the configuration to an ini file
+		with open(metadata_ini_path, 'w') as configfile:
+			config.write(configfile)
+
+		print("Information written to level_info.ini")
 	
 	return parse_ini_file(metadata_ini_path, global_info)
 
