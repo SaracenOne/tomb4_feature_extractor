@@ -1,3 +1,4 @@
+import os
 import struct
 import re
 
@@ -186,10 +187,47 @@ def find_all_addresses(string):
 	return address_array
 
 
-def load_syntax_file(syntax_file_name):
+def load_syntax_file():
 	opcodes = []
 
-	with open(syntax_file_name, 'r') as file:
+	syntax_table = [
+		{"filename":"syntaxTREP.fln", "description":"Final TREP FURR Syntax file"},
+		{"filename":"syntaxEarly.fln", "description":"Early TREP FURR Syntax file"},
+		{"filename":"syntaxT4L.fln", "description":"T4Larson Syntax file"}
+	]
+
+	syntax_file_name = ""
+	selection = 0
+
+	while True:
+		count = 1
+		print(
+			"""Choose select the number for the FURR syntax file you wish to attempt extraction from. Different choices my yield different success rates at extracting FURR data: 
+			""")
+		
+		for option in syntax_table:
+			print(str(count) + ". " + option["description"] + (" (Default)" if count == 1 else ""))
+			count += 1
+		
+		user_input = input("Enter your choice (1-3): ")
+
+		if user_input in ["", "1", "2", "3"]:
+			if user_input == "":
+				selection = 1
+			else:
+				selection = int(user_input)
+			break
+		else:
+			print("Invalid input. Please enter a number between 1 and 3, or leave it blank.")
+
+	syntax_file_name = syntax_table[selection-1]["filename"]
+
+	script_dir = os.path.dirname(os.path.abspath(__file__))
+	full_path = os.path.join(script_dir, syntax_file_name)
+
+	print("Attempting to open script syntax file: " + full_path)
+
+	with open(full_path, 'r') as file:
 		for line in file:
 			if line.startswith(';') or line.startswith('!') or not line.strip():
 				continue
@@ -419,6 +457,10 @@ def extract_flipeffect_table_from_exe(f, opcode_list, is_using_remapped_memory):
 					nop_count = 0
 					if (command_result["new_command"]):
 						flipeffect_command_table.append(command_result["new_command"])
+
+						# If the command is RETN, we can break out of the loop
+						if command_result["new_command"][0] == "RETN":
+							break
 					else:
 						flipeffect_command_table.append({"new_command":["UNKNOWN COMMAND"], "was_nop":False})
 					nop_count = 0
@@ -431,15 +473,13 @@ def extract_flipeffect_table_from_exe(f, opcode_list, is_using_remapped_memory):
 			print("FlipEffect: " + str(i + FIRST_CUSTOM_FLIPEFFECT))
 			for command in flipeffect_table[i]:
 				print(command)
-				#if (command[0] == "RETN"):
-				#	break
 		else:
 			print("Could not find any commands for flipeffect: " + str(i + FIRST_CUSTOM_FLIPEFFECT))
 	
 	return flipeffect_table
 				
-def read_exe_file(exe_file_path, syntax_file_name, is_using_remapped_memory):
-	opcodes = load_syntax_file(syntax_file_name)
+def read_exe_file(exe_file_path, is_using_remapped_memory):
+	opcodes = load_syntax_file()
 	
 	opcodes.append({
 		"byte_arrays":get_oneshot_opcode(is_using_remapped_memory),
