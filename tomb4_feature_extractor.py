@@ -248,7 +248,7 @@ def detect_tomb4_game(path=None, exe_file=None):
 	if is_extended_exe_size:
 		if meta_info["furr_support"]:
 			print("Scanning for FURR modifications in exe file...")
-			furr_data = furr_syntax.read_exe_file(exe_path, "syntax.fln", is_using_remapped_memory)
+			furr_data = furr_syntax.read_exe_file(exe_path, is_using_remapped_memory)
 		else:
 			print("FURR support not detected. Skipping.")
 	else:
