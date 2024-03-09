@@ -78,6 +78,16 @@ def detect_next_generation_dll(path):
 
 	return version
 
+def detect_effects_bin(path):
+	effects_bin_path = os.path.join(path, "effects.bin")
+
+	# Detect if the path is valid.
+	if not os.path.exists(effects_bin_path):
+		print(f"No effects.bin at {effects_bin_path}. Returning.")
+		return False
+	
+	return True
+
 def parse_ini_file(file_path, global_info):
 	# Create a configparser object
 	config = configparser.ConfigParser()
@@ -206,6 +216,9 @@ def detect_tomb4_game(path=None, exe_file=None):
 	print("Searching for NextGeneration dll...")
 	trng_version = detect_next_generation_dll(path)
 
+	print("Searching for effects.bin...")
+	has_effects_bin = detect_effects_bin(path)
+
 	print("Scanning for TREP modifications in exe file...")
 	patch_data = trle_patch_binary.read_binary_file(exe_path, is_extended_exe_size, is_using_remapped_memory, False)
 
@@ -288,6 +301,11 @@ def detect_tomb4_game(path=None, exe_file=None):
 			with open(exe_path, 'rb') as f:
 				if not binary_funcs.is_nop_at_range(f, 0x000EF800, 0x000EF922):
 					global_info["trep_using_extended_saves"] = True
+
+	if has_effects_bin:
+		global_info["tomo_enable_weather_flipeffect"] = True
+		global_info["tomo_swap_whitelight_for_teleporter"] = True
+
 
 	global_level_info = {}
 
