@@ -1,32 +1,14 @@
+from enum import Enum
+
 import binary_funcs
 import data_tables
 
-def check_if_using_gradiant_bar(f) -> bool:
-	if binary_funcs.get_u8_at_address(f, 0x0007B0F9) != 0x74:
-		return False
-	
-	if binary_funcs.get_u8_at_address(f, 0x0007B101) != 0x74:
-		return False
-	
-	if binary_funcs.get_u8_at_address(f, 0x0007B153) != 0xB4:
-		return False
-	
-	if binary_funcs.get_u8_at_address(f, 0x0007B16A) != 0xBC:
-		return False
-	
-	if binary_funcs.get_u8_at_address(f, 0x0007B20D) != 0x74:
-		return False
-	
-	if binary_funcs.get_u8_at_address(f, 0x0007B211) != 0x7C:
-		return False
-	
-	if binary_funcs.get_u8_at_address(f, 0x0007B215) != 0xB4:
-		return False
-	
-	if binary_funcs.get_u8_at_address(f, 0x0007B244) != 0xB4:
-		return False
+class GradientType(Enum):
+    NORMAL = 0
+    GRADIENT_TR5 = 1
+    GRADIENT_FLAT = 2
 
-	return True
+
 
 def flep_patch_check_if_has_gun_ricochet_effect(f) -> bool:
 	if binary_funcs.get_u8_at_address(f, 0x00033FC6) != 0xE9:
@@ -123,7 +105,8 @@ def read_misc_info(f, is_patch_binary):
 		# Remove Look Transparency
 		look_transparency_byte = binary_funcs.get_u8_at_address(f, 0x0001d0c0)
 		remove_look_transparency = True if look_transparency_byte == 0xeb else False
-		print(f"Look Transparency Disabled: {str(remove_look_transparency)}.")
+		if remove_look_transparency:
+			print(f"Look Transparency Disabled: {str(remove_look_transparency)}.")
 
 		# Lara impales on spikes
 		if binary_funcs.is_nop_at_range(f, 0x000160ED, 0x000160EE):
@@ -136,7 +119,8 @@ def read_misc_info(f, is_patch_binary):
 		# Static Shatter Range
 		lower_static_shatter_threshold = binary_funcs.get_u16_at_address(f, 0x0004d013)
 		upper_static_shatter_threshold = binary_funcs.get_u16_at_address(f, 0x0004d019)
-		print(f"Static Shatter Range: {str(lower_static_shatter_threshold)}-{str(upper_static_shatter_threshold)}.")
+		if lower_static_shatter_threshold != 50 or upper_static_shatter_threshold != 58:
+			print(f"Static Shatter Range: {str(lower_static_shatter_threshold)}-{str(upper_static_shatter_threshold)}.")
 
 		# Poison Dart Bugfix
 		if binary_funcs.compare_data_at_address(f, 0x00014044, bytes([0xF2])):
@@ -144,7 +128,8 @@ def read_misc_info(f, is_patch_binary):
 
 		# Poison Dart Value
 		posion_dart_posion_value = binary_funcs.get_s16_at_address(f, 0x00014048)
-		print(f"Poison Dart Poison Value: {posion_dart_posion_value}.")
+		if posion_dart_posion_value != 160:
+			print(f"Poison Dart Poison Value: {posion_dart_posion_value}.")
 
 		# Fix Holsters
 		fix_holsters = False
@@ -210,28 +195,86 @@ def read_stat_info(f, is_patch_binary):
 
 	return stat_info
 
-def read_health_bar_info(f):
+def update_bar_background_colors(f, bar):
+	address_1 = binary_funcs.get_u8_at_address(f, 0x00079083)
+	address_2 = binary_funcs.get_u8_at_address(f, 0x0007B316)
+	border_1_color = 0xffffffff
+	border_2_color = 0xffffffff
+	if address_1 != 0x83:
+		border_1_color = binary_funcs.get_bgr_color_at_address(f, 0x00079084)
+
+	if address_2 != 0x83:
+		border_2_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B317)
+
+	if border_1_color != border_2_color:
+		print(f"Border color: MISMATCH.")
+		return bar
+	
+	if border_1_color != 0xffffffff:
+		bar["border_rect"] = {}
+		bar["border_rect"]["upper_left_color"] = border_1_color
+		bar["border_rect"]["upper_right_color"] = border_1_color
+		bar["border_rect"]["lower_right_color"] = border_1_color
+		bar["border_rect"]["lower_left_color"] = border_1_color
+
+	return bar
+
+def construct_bar(f, bar, main_color, fade_color, type):
+	bar["upper_rect"] = {}
+	bar["lower_rect"] = {}
+
+	if type == GradientType.NORMAL:
+		bar["upper_rect"]["upper_left_color"] = fade_color
+		bar["upper_rect"]["upper_right_color"] = fade_color
+		bar["upper_rect"]["lower_right_color"] = main_color
+		bar["upper_rect"]["lower_left_color"] = main_color
+
+		bar["lower_rect"]["upper_left_color"] = main_color
+		bar["lower_rect"]["upper_right_color"] = main_color
+		bar["lower_rect"]["lower_right_color"] = fade_color
+		bar["lower_rect"]["lower_left_color"] = fade_color
+	elif type == GradientType.GRADIENT_TR5:
+		black_color = {"r":0, "g":0, "b":0}
+
+		bar["upper_rect"]["upper_left_color"] = black_color
+		bar["upper_rect"]["upper_right_color"] = black_color
+		bar["upper_rect"]["lower_right_color"] = fade_color
+		bar["upper_rect"]["lower_left_color"] = main_color
+
+		bar["lower_rect"]["upper_left_color"] = main_color
+		bar["lower_rect"]["upper_right_color"] = fade_color
+		bar["lower_rect"]["lower_right_color"] = black_color
+		bar["lower_rect"]["lower_left_color"] = black_color
+	elif type == GradientType.GRADIENT_FLAT:
+		bar["upper_rect"]["upper_left_color"] = main_color
+		bar["upper_rect"]["upper_right_color"] = fade_color
+		bar["upper_rect"]["lower_right_color"] = fade_color
+		bar["upper_rect"]["lower_left_color"] = main_color
+
+		bar["lower_rect"]["upper_left_color"] = main_color
+		bar["lower_rect"]["upper_right_color"] = fade_color
+		bar["lower_rect"]["lower_right_color"] = fade_color
+		bar["lower_rect"]["lower_left_color"] = main_color
+
+	return bar
+
+def read_health_bar_info(f, type):
 	print("Scanning Health Bar Info...")
 	
 	health_bar_info = {}
 
 	# Health Bar
 	health_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5B0)
-	if health_bar_main_color['r'] != 255 or health_bar_main_color['g'] != 0 or health_bar_main_color['b'] != 0:
-		health_bar_info["main_color"] = health_bar_main_color
-
 	health_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5BA)
-	if health_bar_fade_color['r'] != 0 or health_bar_fade_color['g'] != 0 or health_bar_fade_color['b'] != 0:
-		health_bar_info["fade_color"] = health_bar_fade_color
-
 	health_bar_alternative_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5AB)
-	if health_bar_alternative_color['r'] != 0 or health_bar_alternative_color['g'] != 255 or health_bar_alternative_color['b'] != 0:
-		health_bar_info["alternative_color"] = {"r":0, "g":0, "b":0}
 
-		health_bar_info["alternative_color"]['r'] = min(health_bar_info["main_color"]['r'] + health_bar_info["alternative_color"]['r'], 255)
-		health_bar_info["alternative_color"]['g'] = min(health_bar_info["main_color"]['g'] + health_bar_info["alternative_color"]['g'], 255)
-		health_bar_info["alternative_color"]['b'] = min(health_bar_info["main_color"]['b'] + health_bar_info["alternative_color"]['b'], 255)
+	if health_bar_main_color['r'] != 255 or health_bar_main_color['g'] != 0 or health_bar_main_color['b'] != 0 or \
+	health_bar_fade_color['r'] != 0 or health_bar_fade_color['g'] != 0 or health_bar_fade_color['b'] != 0 or \
+	health_bar_alternative_color['r'] != 0 or health_bar_alternative_color['g'] != 255 or health_bar_alternative_color['b'] != 0 or \
+	type != GradientType.NORMAL:
+		health_bar_info = construct_bar(f, health_bar_info, health_bar_main_color, health_bar_fade_color, type)
 
+	health_bar_info = update_bar_background_colors(f, health_bar_info)
 
 	health_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B5C5)
 	if health_bar_width != 150:
@@ -247,19 +290,59 @@ def read_health_bar_info(f):
 
 	return health_bar_info
 
-def read_air_bar_info(f):
+def read_poison_bar_info(f, type):
+	print("Scanning Poison Bar Info...")
+	
+	poison_bar_info = {}
+
+	# Poison Bar
+	poison_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5B0)
+	poison_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5BA)
+	poison_bar_alternative_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B5AB)
+
+	if poison_bar_main_color['r'] != 255 or poison_bar_main_color['g'] != 0 or poison_bar_main_color['b'] != 0 or \
+	poison_bar_fade_color['r'] != 0 or poison_bar_fade_color['g'] != 0 or poison_bar_fade_color['b'] != 0 or \
+	poison_bar_alternative_color['r'] != 0 or poison_bar_alternative_color['g'] != 255 or poison_bar_alternative_color['b'] != 0 or \
+	type != GradientType.NORMAL:
+		poison_bar_main_color = {"r":0, "g":0, "b":0}
+
+		poison_bar_main_color['r'] = min(poison_bar_main_color['r'] + poison_bar_alternative_color['r'], 255)
+		poison_bar_main_color['g'] = min(poison_bar_main_color['g'] + poison_bar_alternative_color['g'], 255)
+		poison_bar_main_color['b'] = min(poison_bar_main_color['b'] + poison_bar_alternative_color['b'], 255)
+
+		poison_bar_info = construct_bar(f, poison_bar_info, poison_bar_main_color, poison_bar_fade_color, type)
+
+	poison_bar_info = update_bar_background_colors(f, poison_bar_info)
+
+	poison_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B5C5)
+	if poison_bar_width != 150:
+		poison_bar_info["width"] = poison_bar_width
+
+	poison_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B5C3)
+	if poison_bar_height != 12:
+		poison_bar_info["height"] = poison_bar_height
+
+	poison_bar_is_animated = binary_funcs.compare_data_at_address(f, 0x0007B5CC, bytes([0x50, 0xD7]))
+	if poison_bar_is_animated:
+		poison_bar_info["is_animated"] = poison_bar_is_animated
+
+	return poison_bar_info
+
+def read_air_bar_info(f, type):
 	print("Scanning Air Bar Info...")
 	
 	air_bar_info = {}
 
 	# Air Bar
 	air_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B565)
-	if air_bar_main_color['r'] != 0 or air_bar_main_color['g'] != 0 or air_bar_main_color['b'] != 255:
-		air_bar_info["main_color"] = air_bar_main_color
-
 	air_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B56D)
-	if air_bar_fade_color['r'] != 0 or air_bar_fade_color['g'] != 0 or air_bar_fade_color['b'] != 0:
-		air_bar_info["fade_color"] = air_bar_fade_color
+
+	if air_bar_main_color['r'] != 0 or air_bar_main_color['g'] != 0 or air_bar_main_color['b'] != 255 or \
+	air_bar_fade_color['r'] != 0 or air_bar_fade_color['g'] != 0 or air_bar_fade_color['b'] != 0 or \
+	type != GradientType.NORMAL:
+		air_bar_info = construct_bar(f, air_bar_info, air_bar_main_color, air_bar_fade_color, type)
+
+	air_bar_info = update_bar_background_colors(f, air_bar_info)
 
 	air_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B579)
 	if air_bar_width != 150:
@@ -279,24 +362,25 @@ def read_air_bar_info(f):
 
 	return air_bar_info
 
-def read_sprint_bar_info(f):
+def read_sprint_bar_info(f, type):
 	print("Scanning Sprint Bar Info...")
 	
 	sprint_bar_info = {}
 
 	# Sprint Bar
 	sprint_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B523)
-	if sprint_bar_main_color['r'] != 0 or sprint_bar_main_color['g'] != 255 or sprint_bar_main_color['b'] != 0:
-		sprint_bar_info["main_color"] = sprint_bar_main_color
-
 	sprint_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B528)
-	if sprint_bar_fade_color['r'] != 0 or sprint_bar_fade_color['g'] != 0 or sprint_bar_fade_color['b'] != 0:
-		sprint_bar_info["fade_color"] = sprint_bar_fade_color
+
+	if sprint_bar_main_color['r'] != 0 or sprint_bar_main_color['g'] != 255 or sprint_bar_main_color['b'] != 0 or \
+	sprint_bar_fade_color['r'] != 0 or sprint_bar_fade_color['g'] != 0 or sprint_bar_fade_color['b'] != 0 or \
+	type != GradientType.NORMAL:
+		sprint_bar_info = construct_bar(f, sprint_bar_info, sprint_bar_main_color, sprint_bar_fade_color, type)
+
+	sprint_bar_info = update_bar_background_colors(f, sprint_bar_info)
 
 	sprint_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B538)
 	if sprint_bar_width != 150:
 		sprint_bar_info["width"] = sprint_bar_width
-		
 		
 	sprint_bar_height = binary_funcs.get_u8_at_address(f, 0x0007B536)
 	if sprint_bar_height != 12:
@@ -312,19 +396,21 @@ def read_sprint_bar_info(f):
 
 	return sprint_bar_info
 
-def read_loading_bar_info(f):
+def read_loading_bar_info(f, type):
 	print("Scanning Loading Bar Info...")
 	
 	loading_bar_info = {}
 
 	# Loading Bar
 	loading_bar_main_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B65A)
-	if loading_bar_main_color['r'] != 159 or loading_bar_main_color['g'] != 31 or loading_bar_main_color['b'] != 128:
-		loading_bar_info["main_color"] = loading_bar_main_color
-
 	loading_bar_fade_color = binary_funcs.get_bgr_color_at_address(f, 0x0007B65F)
-	if loading_bar_fade_color['r'] != 0 or loading_bar_fade_color['g'] != 0 or loading_bar_fade_color['b'] != 0:
-		loading_bar_info["fade_color"] = loading_bar_fade_color
+	
+	if loading_bar_main_color['r'] != 159 or loading_bar_main_color['g'] != 31 or loading_bar_main_color['b'] != 128 or \
+	loading_bar_fade_color['r'] != 0 or loading_bar_fade_color['g'] != 0 or loading_bar_fade_color['b'] != 0 or \
+	type != GradientType.NORMAL:
+		loading_bar_info = construct_bar(f, loading_bar_info, loading_bar_main_color, loading_bar_fade_color, type)
+
+	loading_bar_info = update_bar_background_colors(f, loading_bar_info)
 
 	loading_bar_width = binary_funcs.get_s16_at_address(f, 0x0007B693)
 	if loading_bar_width != 600:
@@ -346,18 +432,19 @@ def read_bars_info(f, is_patch_binary):
 	bars_info = {}
 
 	if not is_patch_binary:
-		bars_info["health_bar"] = read_health_bar_info(f)
-		bars_info["air_bar"] = read_air_bar_info(f)
-		bars_info["sprint_bar"] = read_sprint_bar_info(f)
-		bars_info["loading_bar"] = read_loading_bar_info(f)
+		bar_type_byte = binary_funcs.get_u8_at_address(f, 0x0007b0f9)
+		
+		gradient_type = GradientType.NORMAL
+		if bar_type_byte == 0x74:
+			gradient_type = GradientType.GRADIENT_TR5
+		elif bar_type_byte == 0x6c:
+			gradient_type = GradientType.GRADIENT_FLAT
 
-		# Gradiant
-		is_gradiant_bar = check_if_using_gradiant_bar(f)
-		if is_gradiant_bar:
-			bars_info["health_bar"]["is_gradiant_bar"] = is_gradiant_bar
-			bars_info["air_bar"]["is_gradiant_bar"] = is_gradiant_bar
-			bars_info["sprint_bar"]["is_gradiant_bar"] = is_gradiant_bar
-			bars_info["loading_bar"]["is_gradiant_bar"] = is_gradiant_bar
+		bars_info["health_bar"] = read_health_bar_info(f, gradient_type)
+		bars_info["poison_bar"] = read_poison_bar_info(f, gradient_type)
+		bars_info["air_bar"] = read_air_bar_info(f, gradient_type)
+		bars_info["sprint_bar"] = read_sprint_bar_info(f, gradient_type)
+		bars_info["loading_bar"] = read_loading_bar_info(f, gradient_type)
 
 	return bars_info
 
@@ -591,7 +678,7 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 		show_hp_bar_in_inventory = False
 		if not binary_funcs.is_nop_at_range(f, 0x000EFD90, 0x000EFDCB):
 			show_hp_bar_in_inventory = True
-		print(f"Show HP bar in Inventory: {str(show_hp_bar_in_inventory)}")
+			print(f"Show HP bar in Inventory: {str(show_hp_bar_in_inventory)}")
 
 		if is_patch_binary:
 			# Enable Ricochet SFX
@@ -599,7 +686,6 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 			if has_gun_ricochet:
 				patch_data["misc_info"]["enable_ricochet_sound_effect"] = True
 		else:
-
 			# Enable Ricochet SFX
 			if not binary_funcs.is_nop_at_range(f, 0x000EE422, 0x000EE43E):
 				patch_data["misc_info"]["enable_ricochet_sound_effect"] = True
@@ -608,13 +694,13 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 			enable_revolver_shell_casings = False
 			if not binary_funcs.is_nop_at_range(f, 0x000EFEC0, 0x000EFEDC):
 				enable_revolver_shell_casings = True
-			print(f"Enable Revolver Shell Casings: {str(enable_revolver_shell_casings)}")
+				print(f"Enable Revolver Shell Casings: {str(enable_revolver_shell_casings)}")
 
 			# Enable Crossbow Shell Casings
 			enable_crossbow_shell_casings = False
 			if not binary_funcs.is_nop_at_range(f, 0x000EFFC0, 0x000EFFDA):
 				enable_crossbow_shell_casings = True
-			print(f"Enable Crossbow Shell Casings: {str(enable_crossbow_shell_casings)}")
+				print(f"Enable Crossbow Shell Casings: {str(enable_crossbow_shell_casings)}")
 
 			# Enable Custom Switch Animation OCB
 			enable_custom_switch_animation_ocb = False
