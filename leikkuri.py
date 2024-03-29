@@ -966,7 +966,7 @@ default_font_table = [
 	}
 ]
 
-def extract_font_data_from_exe(f):
+def extract_font_data_from_exe(f, font_info):
 	f.seek(FONT_TABLE_ADDRESS)
 
 	font_table = []
@@ -1009,19 +1009,17 @@ def extract_font_data_from_exe(f):
 	f.seek(COMPRESSED_TEXT_FACTOR_ADDRESS)
 	compressed_text_factor = round(struct.unpack('<f', f.read(4))[0], ROUNDING_POINT)
 
-	font_data = {}
-
 	if int(width) != 512:
-		font_data["custom_glyph_scale_width"] = int(width)
+		font_info["custom_glyph_scale_width"] = int(width)
 
 	if int(height) != 240:
-		font_data["custom_glyph_scale_height"] = int(height)
+		font_info["custom_glyph_scale_height"] = int(height)
 
 	if vertical_spacing != 0.075:
-		font_data["custom_vertical_spacing"] = vertical_spacing
+		font_info["custom_vertical_spacing"] = vertical_spacing
 
 	if compressed_text_factor != 0.75:
-		font_data["custom_compressed_text_factor"] = compressed_text_factor
+		font_info["custom_compressed_text_factor"] = compressed_text_factor
 
 	for i in range(0, len(default_font_table)):
 		if \
@@ -1032,11 +1030,11 @@ def extract_font_data_from_exe(f):
 		default_font_table[i]['y_offset'] != font_table[i]['y_offset'] or \
 		default_font_table[i]['top_shade'] != font_table[i]['top_shade'] or \
 		default_font_table[i]['bottom_shade'] != font_table[i]['bottom_shade']:
-			font_data['custom_font_table'] = font_table
+			font_info['custom_font_table'] = font_table
 			break
 
-	return font_data
+	return font_info
 
-def read_exe_file(exe_file_path):
+def read_exe_file(exe_file_path, font_info):
 	with open(exe_file_path, 'rb') as f:
-		return extract_font_data_from_exe(f)
+		return extract_font_data_from_exe(f, font_info)

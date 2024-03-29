@@ -199,7 +199,7 @@ def detect_tomb4_game(path=None, exe_file=None):
 
 	if exe_file_size == EXE_TREP_EXTENDED_SIZE:
 		is_extended_exe_size = True
-		print("File size {file_size} matches TREP extended binary size.")
+		print(f"File size {exe_file_size} matches TREP extended binary size.")
 
 	if exe_hash in trle_vanilla_hashes:
 		print("The engine was detected as an unextended vanilla build.")
@@ -230,6 +230,7 @@ def detect_tomb4_game(path=None, exe_file=None):
 
 	audio_info = patch_data["audio_info"]
 	bars_info = patch_data["bars_info"]
+	font_info = patch_data["font_info"]
 	gfx_info = patch_data["gfx_info"]
 	environment_info = patch_data["environment_info"]
 	misc_info = patch_data["misc_info"]
@@ -239,7 +240,7 @@ def detect_tomb4_game(path=None, exe_file=None):
 	objects_info = patch_data["objects_info"]
 
 	print("Scanning for Leikkuri modifications in exe file...")
-	font_info = leikkuri.read_exe_file(exe_path)
+	font_info = leikkuri.read_exe_file(exe_path, font_info)
 
 	esse_path = os.path.join(path, "script2.dat")
 	esse_result = []
@@ -309,20 +310,32 @@ def detect_tomb4_game(path=None, exe_file=None):
 
 	global_level_info = {}
 
-	global_level_info["audio_info"] = audio_info
-	global_level_info["bars_info"] = bars_info
-	global_level_info["gfx_info"] = gfx_info
-	global_level_info["environment_info"] = environment_info
-	global_level_info["misc_info"] = misc_info
-	global_level_info["stat_info"] = stat_info
-	global_level_info["font_info"] = font_info
-	global_level_info["lara_info"] = lara_info
-	global_level_info["objects_info"] = objects_info
+	if bool(audio_info):
+		global_level_info["audio_info"] = audio_info
+	if bool(bars_info):
+		global_level_info["bars_info"] = bars_info
+	if bool(gfx_info):
+		global_level_info["gfx_info"] = gfx_info
+	if bool(environment_info):
+		global_level_info["environment_info"] = environment_info
+	if bool(misc_info):
+		global_level_info["misc_info"] = misc_info
+	if bool(stat_info):
+		global_level_info["stat_info"] = stat_info
+	if bool(font_info):
+		global_level_info["font_info"] = font_info
+	if bool(lara_info):
+		global_level_info["lara_info"] = lara_info
+	if bool(objects_info):
+		global_level_info["objects_info"] = objects_info
 
 	#
-	output_mod_config["global_info"] = global_info
-	output_mod_config["global_level_info"] = global_level_info
-	output_mod_config["levels"] = esse_result
+	if bool(global_info):
+		output_mod_config["global_info"] = global_info
+	if bool(global_level_info):
+		output_mod_config["global_level_info"] = global_level_info
+	if bool(esse_result):
+		output_mod_config["levels"] = esse_result
 
 	json_data = json.dumps(output_mod_config, indent=4, separators=(',', ':'))
 

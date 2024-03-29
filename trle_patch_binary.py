@@ -33,9 +33,9 @@ def read_objects_info(f, is_patch_binary):
 
 	objects_info = {}
 
-	objects_info["object_customization"] = []
+	object_customization = []
 	for i in range(0, data_tables.T4PLUS_OBJECT_COUNT):
-		objects_info["object_customization"].append({})
+		object_customization.append({})
 
 	if not is_patch_binary:
 		for row in data_tables.enemy_health_table:
@@ -45,7 +45,7 @@ def read_objects_info(f, is_patch_binary):
 			default_health = row["default"]
 			if (enemy_health != default_health):
 				print("Enemy {enemy_name} has modified health: {enemy_health}".format(enemy_name=enemy_name, enemy_health=enemy_health))
-				objects_info["object_customization"][row["slot_number"]]["hit_points"] = enemy_health
+				object_customization[row["slot_number"]]["hit_points"] = enemy_health
 
 
 		# Small Scorpion
@@ -54,7 +54,7 @@ def read_objects_info(f, is_patch_binary):
 			samll_scorpion_name = "small_scorpion"
 			if small_scorpion_health != 8:
 				print("Enemy {enemy_name} has modified health: {enemy_health}".format(enemy_name=samll_scorpion_name, enemy_health=small_scorpion_health))
-				objects_info["object_customization"][106]["hit_points"] = enemy_health
+				object_customization[106]["hit_points"] = enemy_health
 
 	if not is_patch_binary:
 		for row in data_tables.enemy_damage_table:
@@ -75,11 +75,11 @@ def read_objects_info(f, is_patch_binary):
 				for slot_number in row["slot_numbers"]:
 					match row["damage_id"]:
 						case 1:
-							objects_info["object_customization"][slot_number]["damage_1"] = damage_value
+							object_customization[slot_number]["damage_1"] = damage_value
 						case 2:
-							objects_info["object_customization"][slot_number]["damage_2"] = damage_value
+							object_customization[slot_number]["damage_2"] = damage_value
 						case 3:
-							objects_info["object_customization"][slot_number]["damage_3"] = damage_value
+							object_customization[slot_number]["damage_3"] = damage_value
 
 		beetle_dispertion = binary_funcs.get_s16_at_address(f, 0x0000E3EC)
 		if beetle_dispertion != 1024:
@@ -94,12 +94,69 @@ def read_objects_info(f, is_patch_binary):
 		if disable_mutant_locust_attack:
 			print("Mutant Locust Attack disabled")
 
+	# Check if any objects were customized before including the array in the objects_info dict.
+	for object in object_customization:
+		if bool(object):
+			objects_info["object_customization"] = object_customization
+			break
+
 	return objects_info
+
+def read_font_info(f, is_patch_binary):
+	font_info = {}
+    
+	# Font Customizer
+	text_or_critical_bar_blink_interval = binary_funcs.get_u8_at_address(f, 0x000521B0)
+	if text_or_critical_bar_blink_interval != 5:
+		font_info["text_or_critical_bar_blink_interval"] = text_or_critical_bar_blink_interval
+
+	main_font_main_color = binary_funcs.get_rgb_color_at_address(f, 0x000ADEF8)
+	if main_font_main_color['r'] != 128 or main_font_main_color['g'] != 128 or main_font_main_color['b'] != 128:
+		font_info["main_font_color"] = main_font_main_color
+        
+	main_font_fade_color = binary_funcs.get_rgb_color_at_address(f, 0x000ADEFC)
+	if main_font_fade_color['r'] != 128 or main_font_fade_color['g'] != 128 or main_font_fade_color['b'] != 128:
+		font_info["main_font_fade_color"] = main_font_fade_color
+        
+	options_title_font_main_color = binary_funcs.get_rgb_color_at_address(f, 0x000ADF18)
+	if options_title_font_main_color['r'] != 192 or options_title_font_main_color['g'] != 128 or options_title_font_main_color['b'] != 64:
+		font_info["options_title_font_main_color"] = options_title_font_main_color
+
+	options_title_font_fade_color = binary_funcs.get_rgb_color_at_address(f, 0x000ADF1C)
+	if options_title_font_fade_color['r'] != 64 or options_title_font_fade_color['g'] != 16 or options_title_font_fade_color['b'] != 0:
+		font_info["options_title_font_fade_color"] = options_title_font_fade_color
+        
+	inventory_title_font_main_color = binary_funcs.get_rgb_color_at_address(f, 0x000ADF28)
+	if inventory_title_font_main_color['r'] != 224 or inventory_title_font_main_color['g'] != 192 or inventory_title_font_main_color['b'] != 0:
+		font_info["inventory_title_font_main_color"] = inventory_title_font_main_color
+
+	inventory_title_font_fade_color = binary_funcs.get_rgb_color_at_address(f, 0x000ADF2C)
+	if inventory_title_font_fade_color['r'] != 64 or inventory_title_font_fade_color['g'] != 32 or inventory_title_font_fade_color['b'] != 0:
+		font_info["inventory_title_font_fade_color"] = inventory_title_font_fade_color
+
+	inventory_title_item_main_color = binary_funcs.get_rgb_color_at_address(f, 0x000ADF10)
+	if inventory_title_item_main_color['r'] != 128 or inventory_title_item_main_color['g'] != 128 or inventory_title_item_main_color['b'] != 128:
+		font_info["inventory_title_item_main_color"] = inventory_title_item_main_color
+
+	inventory_title_item_fade_color = binary_funcs.get_rgb_color_at_address(f, 0x000ADF14)
+	if inventory_title_item_fade_color['r'] != 16 or inventory_title_item_fade_color['g'] != 16 or inventory_title_item_fade_color['b'] != 16:
+		font_info["inventory_title_item_fade_color"] = inventory_title_item_fade_color
+
+	return font_info
 
 def read_misc_info(f, is_patch_binary):
 	print("Scanning Misc Info...")
 
 	misc_info = {}
+
+	# Font Customizer
+	text_or_critical_bar_blink_interval = binary_funcs.get_u8_at_address(f, 0x000521B0)
+	if text_or_critical_bar_blink_interval != 5:
+		misc_info["text_or_critical_bar_blink_interval"] = text_or_critical_bar_blink_interval
+
+	legend_timer = binary_funcs.get_u8_at_address(f, 0x00050F59)
+	if legend_timer != 150:
+		misc_info["legend_timer"] = legend_timer
 
 	if not is_patch_binary:
 		# Remove Look Transparency
@@ -111,10 +168,6 @@ def read_misc_info(f, is_patch_binary):
 		# Lara impales on spikes
 		if binary_funcs.is_nop_at_range(f, 0x000160ED, 0x000160EE):
 			misc_info["lara_impales_on_spikes"] = True
-
-		legend_timer = binary_funcs.get_u8_at_address(f, 0x00050F59)
-		if legend_timer != 150:
-			misc_info["legend_timer"] = legend_timer
 
 		# Static Shatter Range
 		lower_static_shatter_threshold = binary_funcs.get_u16_at_address(f, 0x0004d013)
@@ -160,22 +213,22 @@ def read_stat_info(f, is_patch_binary):
 		if secret_count != 70:
 			stat_info["secret_count"] = secret_count
 
-		stat_info["equipment_modifiers"] = []
+		equipment_modifiers = []
 		remove_pistols = binary_funcs.is_nop_at_range(f, 0x0005B426, 0x0005B42B)
 		if remove_pistols:
-			stat_info["equipment_modifiers"].append({"object_id":349, "amount":0})
+			equipment_modifiers.append({"object_id":349, "amount":0})
 
 		has_binoculars = True if binary_funcs.get_u8_at_address(f, 0x0005B455) > 0 else False
 		if not has_binoculars:
-			stat_info["equipment_modifiers"].append({"object_id":371, "amount":0})
+			equipment_modifiers.append({"object_id":371, "amount":0})
 
 		has_crowbar = binary_funcs.is_nop_at_range(f, 0x0005B475, 0x0005B476)
 		if has_crowbar:
-			stat_info["equipment_modifiers"].append({"object_id":246, "amount":1})
+			equipment_modifiers.append({"object_id":246, "amount":1})
 
 		large_medipack_count = binary_funcs.get_s16_at_address(f, 0x0005B469)
 		if large_medipack_count != 1:
-			stat_info["equipment_modifiers"].append({"object_id":368, "amount":large_medipack_count})
+			equipment_modifiers.append({"object_id":368, "amount":large_medipack_count})
 
 		small_medipack_count = 3
 		flare_count = 3
@@ -187,11 +240,13 @@ def read_stat_info(f, is_patch_binary):
 			flare_count = binary_funcs.get_s32_at_address(f, 0x0005B444)
 
 		if small_medipack_count != 3:
-			stat_info["equipment_modifiers"].append({"object_id":369, "amount":small_medipack_count})
+			equipment_modifiers.append({"object_id":369, "amount":small_medipack_count})
 		if flare_count != 3:
-			stat_info["equipment_modifiers"].append({"object_id":373, "amount":flare_count})
-
-
+			equipment_modifiers.append({"object_id":373, "amount":flare_count})
+			
+		# Check if any equipment objects were customized before including the array in the stat_info dict.
+		if bool(equipment_modifiers):
+			stat_info["equipment_modifiers"] = equipment_modifiers
 
 	return stat_info
 
@@ -440,11 +495,21 @@ def read_bars_info(f, is_patch_binary):
 		elif bar_type_byte == 0x6c:
 			gradient_type = GradientType.GRADIENT_FLAT
 
-		bars_info["health_bar"] = read_health_bar_info(f, gradient_type)
-		bars_info["poison_bar"] = read_poison_bar_info(f, gradient_type)
-		bars_info["air_bar"] = read_air_bar_info(f, gradient_type)
-		bars_info["sprint_bar"] = read_sprint_bar_info(f, gradient_type)
-		bars_info["loading_bar"] = read_loading_bar_info(f, gradient_type)
+		health_bar = read_health_bar_info(f, gradient_type)
+		if bool(health_bar):
+			bars_info["health_bar"] = health_bar
+		poison_bar = read_poison_bar_info(f, gradient_type)
+		if bool(poison_bar):
+			bars_info["poison_bar"] = poison_bar
+		air_bar = read_air_bar_info(f, gradient_type)
+		if bool(air_bar):
+			bars_info["air_bar"] = air_bar
+		sprint_bar = read_sprint_bar_info(f, gradient_type)
+		if bool(sprint_bar):
+			bars_info["sprint_bar"] = sprint_bar
+		loading_bar = read_loading_bar_info(f, gradient_type)
+		if bool(loading_bar):
+			bars_info["loading_bar"] = loading_bar
 
 	return bars_info
 
@@ -548,8 +613,13 @@ def read_gfx_vapor_info(f, is_patch_binary):
 def read_gfx_info(f, is_patch_binary):
 	gfx_info = {}
 	
-	gfx_info["blood_info"] = read_gfx_blood_info(f, is_patch_binary)
-	gfx_info["vapor_info"] = read_gfx_vapor_info(f, is_patch_binary)
+	blood_info = read_gfx_blood_info(f, is_patch_binary)
+	if bool(blood_info):
+		gfx_info["blood_info"] = blood_info
+
+	vapor_info = read_gfx_vapor_info(f, is_patch_binary)
+	if bool(vapor_info):
+		gfx_info["vapor_info"] = vapor_info
 		
 	return gfx_info
 
@@ -755,6 +825,8 @@ def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memo
 		patch_data["audio_info"] = read_audio_info(f, is_using_remapped_memory, is_patch_binary)
 		print("---")
 		patch_data["bars_info"] = read_bars_info(f, is_patch_binary)
+		print("---")
+		patch_data["font_info"] = read_font_info(f, is_patch_binary)
 		print("---")
 		patch_data["gfx_info"] = read_gfx_info(f, is_patch_binary)
 		print("---")
