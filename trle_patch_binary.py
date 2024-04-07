@@ -8,7 +8,10 @@ class GradientType(Enum):
     GRADIENT_TR5 = 1
     GRADIENT_FLAT = 2
 
-
+class PatchBinaryType(Enum):
+    TREP_EXE = 1
+    FLEP_EXE = 2
+    FLEP_EXTERNAL_BINARY = 3
 
 def flep_patch_check_if_has_gun_ricochet_effect(f) -> bool:
 	if binary_funcs.get_u8_at_address(f, 0x00033FC6) != 0xE9:
@@ -28,7 +31,7 @@ def flep_patch_check_if_has_gun_ricochet_effect(f) -> bool:
 
 	return True
 
-def read_objects_info(f, is_patch_binary):
+def read_objects_info(f, patch_type):
 	print("Scanning Objects Info...")
 
 	objects_info = {}
@@ -37,7 +40,7 @@ def read_objects_info(f, is_patch_binary):
 	for i in range(0, data_tables.T4PLUS_OBJECT_COUNT):
 		object_customization.append({})
 
-	if not is_patch_binary:
+	if patch_type == PatchBinaryType.TREP_EXE:
 		for row in data_tables.enemy_health_table:
 			f.seek(row["address"])
 			enemy_name = row["name"]
@@ -56,7 +59,7 @@ def read_objects_info(f, is_patch_binary):
 				print("Enemy {enemy_name} has modified health: {enemy_health}".format(enemy_name=samll_scorpion_name, enemy_health=small_scorpion_health))
 				object_customization[106]["hit_points"] = enemy_health
 
-	if not is_patch_binary:
+	if patch_type == PatchBinaryType.TREP_EXE:
 		for row in data_tables.enemy_damage_table:
 			f.seek(row["address"])
 			damage_name = row["name"]
@@ -102,7 +105,7 @@ def read_objects_info(f, is_patch_binary):
 
 	return objects_info
 
-def read_font_info(f, is_patch_binary):
+def read_font_info(f, patch_type):
 	font_info = {}
     
 	# Font Customizer
@@ -144,7 +147,7 @@ def read_font_info(f, is_patch_binary):
 
 	return font_info
 
-def read_misc_info(f, is_patch_binary):
+def read_misc_info(f, patch_type):
 	print("Scanning Misc Info...")
 
 	misc_info = {}
@@ -158,7 +161,7 @@ def read_misc_info(f, is_patch_binary):
 	if legend_timer != 150:
 		misc_info["legend_timer"] = legend_timer
 
-	if not is_patch_binary:
+	if patch_type == PatchBinaryType.TREP_EXE:
 		# Remove Look Transparency
 		look_transparency_byte = binary_funcs.get_u8_at_address(f, 0x0001d0c0)
 		remove_look_transparency = True if look_transparency_byte == 0xeb else False
@@ -203,12 +206,12 @@ def read_misc_info(f, is_patch_binary):
 
 	return misc_info
 
-def read_stat_info(f, is_patch_binary):
+def read_stat_info(f, patch_type):
 	print("Scanning Stat Info Info...")
 
 	stat_info = {}
 
-	if not is_patch_binary:
+	if patch_type == PatchBinaryType.TREP_EXE:
 		secret_count = int(binary_funcs.get_fixed_string_at(f, 0x000B1785, 2))
 		if secret_count != 70:
 			stat_info["secret_count"] = secret_count
@@ -481,12 +484,12 @@ def read_loading_bar_info(f, type):
 
 	return loading_bar_info
 
-def read_bars_info(f, is_patch_binary):
+def read_bars_info(f, patch_type):
 	print("Scanning Bar Info...")
 
 	bars_info = {}
 
-	if not is_patch_binary:
+	if patch_type == PatchBinaryType.TREP_EXE:
 		bar_type_byte = binary_funcs.get_u8_at_address(f, 0x0007b0f9)
 		
 		gradient_type = GradientType.NORMAL
@@ -513,7 +516,7 @@ def read_bars_info(f, is_patch_binary):
 
 	return bars_info
 
-def read_gfx_blood_info(f, is_patch_binary):
+def read_gfx_blood_info(f, patch_type):
 	blood_info = {}
 
 	blood_size = binary_funcs.get_u8_at_address(f, 0x00038A18)
@@ -582,10 +585,10 @@ def read_vapor_customization(f, jump_address, index) -> dict:
 
 	return vapor_info
 
-def read_gfx_vapor_info(f, is_patch_binary):
+def read_gfx_vapor_info(f, patch_type):
 	vapor_info = {}
 
-	if is_patch_binary:
+	if patch_type == PatchBinaryType.FLEP_EXE or patch_type == PatchBinaryType.FLEP_EXTERNAL_BINARY:
 		extended_vapor_emitter = not binary_funcs.is_nop_at_range(f, 0x000C53E0, 0x000C5C83)
 		if extended_vapor_emitter:
 			f.seek(0x000C5B21)
@@ -609,22 +612,35 @@ def read_gfx_vapor_info(f, is_patch_binary):
 
 	return vapor_info
 
+def read_fog_color_table(f, patch_type) -> dict:
+	fog_color_table = []
 
-def read_gfx_info(f, is_patch_binary):
+	f.seek(0xabe10)
+	for i in range(0, 28):
+		fog_color = binary_funcs.read_rgb(f)
+		fog_color_table.append(fog_color)
+
+	return fog_color_table
+
+def read_gfx_info(f, patch_type):
 	gfx_info = {}
 	
-	blood_info = read_gfx_blood_info(f, is_patch_binary)
+	blood_info = read_gfx_blood_info(f, patch_type)
 	if bool(blood_info):
 		gfx_info["blood_info"] = blood_info
 
-	vapor_info = read_gfx_vapor_info(f, is_patch_binary)
+	vapor_info = read_gfx_vapor_info(f, patch_type)
 	if bool(vapor_info):
 		gfx_info["vapor_info"] = vapor_info
+
+	#fog_color_table = read_fog_color_table(f, patch_type)
+	#if bool(fog_color_table):
+	#	gfx_info["fog_color_table"] = fog_color_table
 		
 	return gfx_info
 
 
-def read_audio_info(f, is_using_remapped_memory, is_patch_binary):
+def read_audio_info(f, is_using_remapped_memory, patch_type):
 	print("Scanning Audio Info...")
 
 	audio_info = {}
@@ -634,7 +650,7 @@ def read_audio_info(f, is_using_remapped_memory, is_patch_binary):
 	#sample_rate = int.from_bytes(f.read(2), byteorder='little', signed=False)
 	#print(f"Sample Rate: {str(sample_rate)}.")
 	
-	if not is_patch_binary:
+	if patch_type == PatchBinaryType.TREP_EXE:
 		if is_using_remapped_memory:
 			using_bass = not binary_funcs.is_nop_at_range(f, 0x000F66C0, 0x000F6E7E)
 			if using_bass:
@@ -677,12 +693,12 @@ def read_audio_info(f, is_using_remapped_memory, is_patch_binary):
 			
 	return audio_info
 
-def read_environment_info(f, is_patch_binary):
+def read_environment_info(f, patch_type):
 	print("Scanning Environment Info...")
 
 	environment_info = {}
 
-	if not is_patch_binary:
+	if patch_type == PatchBinaryType.TREP_EXE:
 		if binary_funcs.get_u8_at_address(f, 0x000702A6) == 0xEB and binary_funcs.get_u8_at_address(f, 0x00070492) == 0xEB and binary_funcs.get_u8_at_address(f, 0x000706A8):
 			environment_info["disable_distance_limit"] = True
 
@@ -709,14 +725,14 @@ def read_environment_info(f, is_patch_binary):
 
 	return environment_info
 
-def read_lara_info(f, is_patch_binary):
+def read_lara_info(f, patch_type):
 	print("Scanning Lara Info...")
 
 	lara_info = {}
 
 	return lara_info
 
-def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
+def read_extended_info(f, is_extended_exe_size, patch_data, patch_type):
 	print("Scanning Extended Info...")
 	
 	patch_data["meta_info"]["esse_scripted_params"] = False
@@ -725,7 +741,7 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 	patch_data["meta_info"]["furr_support"] = False
 	
 	if is_extended_exe_size:
-		if not is_patch_binary:
+		if patch_type == PatchBinaryType.TREP_EXE:
 			# FURR support
 			if not binary_funcs.is_nop_at_range(f, 0x000C1000, 0x000C2FFF):
 				print(f"FURR support enabled!")
@@ -750,12 +766,7 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 			show_hp_bar_in_inventory = True
 			print(f"Show HP bar in Inventory: {str(show_hp_bar_in_inventory)}")
 
-		if is_patch_binary:
-			# Enable Ricochet SFX
-			has_gun_ricochet = flep_patch_check_if_has_gun_ricochet_effect(f)
-			if has_gun_ricochet:
-				patch_data["misc_info"]["enable_ricochet_sound_effect"] = True
-		else:
+		if patch_type == PatchBinaryType.TREP_EXE:
 			# Enable Ricochet SFX
 			if not binary_funcs.is_nop_at_range(f, 0x000EE422, 0x000EE43E):
 				patch_data["misc_info"]["enable_ricochet_sound_effect"] = True
@@ -794,11 +805,16 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 			enable_rollingball_smash_and_kill = False
 			if not binary_funcs.is_nop_at_range(f, 0x000EEDE0, 0x000EEE17):
 				enable_rollingball_smash_and_kill = True
-				print(f"Enable Rollingball Smash and Kill: {str(enable_rollingball_smash_and_kill)}")
+				patch_data["misc_info"]["enable_smashing_and_killing_rolling_balls"] = enable_rollingball_smash_and_kill
+			print(f"Enable Rollingball Smash and Kill: {str(enable_rollingball_smash_and_kill)}")
 
 			# Enable Standing Pushables
+			enable_standing_pushables = False
 			if not binary_funcs.is_nop_at_range(f, 0x000EE43F, 0x000EE9DE):
-				patch_data["misc_info"]["enable_standing_pushables"] = True
+				enable_standing_pushables = True
+				patch_data["misc_info"]["enable_standing_pushables"] = enable_standing_pushables
+			print(f"Enable Standing Pushables: {str(enable_standing_pushables)}")
+
 
 			# Lara Crawlspace Jump
 			if not binary_funcs.is_nop_at_range(f, 0x000EEA72, 0x000EEC3B):
@@ -809,12 +825,16 @@ def read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary):
 			if not binary_funcs.is_nop_at_range(f, 0x000EF1E0, 0x000EF22A):
 				patch_data["lara_info"]["ledge_to_jump_state"] = binary_funcs.get_s16_at_address(f, 0x000EF1FC)
 				patch_data["lara_info"]["ledge_to_down_state"] = binary_funcs.get_s16_at_address(f, 0x000EF224)
-
+		else:
+			# Enable Ricochet SFX
+			has_gun_ricochet = flep_patch_check_if_has_gun_ricochet_effect(f)
+			if has_gun_ricochet:
+				patch_data["misc_info"]["enable_ricochet_sound_effect"] = True
 
 	return patch_data
 
     
-def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memory, is_patch_binary):
+def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memory, patch_type):
 	patch_data = {}
 
 	# Meta info is not serialized
@@ -822,25 +842,25 @@ def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memo
 
 	with open(exe_file_path, 'rb') as f:
 		print("---")
-		patch_data["audio_info"] = read_audio_info(f, is_using_remapped_memory, is_patch_binary)
+		patch_data["audio_info"] = read_audio_info(f, is_using_remapped_memory, patch_type)
 		print("---")
-		patch_data["bars_info"] = read_bars_info(f, is_patch_binary)
+		patch_data["bars_info"] = read_bars_info(f, patch_type)
 		print("---")
-		patch_data["font_info"] = read_font_info(f, is_patch_binary)
+		patch_data["font_info"] = read_font_info(f, patch_type)
 		print("---")
-		patch_data["gfx_info"] = read_gfx_info(f, is_patch_binary)
+		patch_data["gfx_info"] = read_gfx_info(f, patch_type)
 		print("---")
-		patch_data["objects_info"] = read_objects_info(f, is_patch_binary)
+		patch_data["objects_info"] = read_objects_info(f, patch_type)
 		print("---")
-		patch_data["environment_info"] = read_environment_info(f, is_patch_binary)
+		patch_data["environment_info"] = read_environment_info(f, patch_type)
 		print("---")
-		patch_data["lara_info"] = read_lara_info(f, is_patch_binary)
+		patch_data["lara_info"] = read_lara_info(f, patch_type)
 		print("---")
-		patch_data["stat_info"] = read_stat_info(f, is_patch_binary)
+		patch_data["stat_info"] = read_stat_info(f, patch_type)
 		print("---")
-		patch_data["misc_info"] = read_misc_info(f, is_patch_binary)
+		patch_data["misc_info"] = read_misc_info(f, patch_type)
 		print("---")
-		patch_data = read_extended_info(f, is_extended_exe_size, patch_data, is_patch_binary)
+		patch_data = read_extended_info(f, is_extended_exe_size, patch_data, patch_type)
 		print("---")
 
 	return patch_data

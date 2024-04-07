@@ -2,8 +2,6 @@ import os
 import struct
 import re
 
-USE_REMAP_REMORY = True
-
 MAX_NOPS = 128
 
 ONESHOT_OPCODE_DEFAULT = 				[bytes.fromhex("5351B900009900BB"), bytes.fromhex("2F000000"), bytes.fromhex("83EB2FC6041901595B66C705FECB4A00"), bytes.fromhex("2F00")]
@@ -270,7 +268,7 @@ def load_syntax_file():
 			
 	return opcodes
 	
-def convert_local_addresses_to_global(command_bytes, command_base_position, address_table):
+def convert_local_addresses_to_global(command_bytes, command_base_position, address_table, is_using_remapped_memory):
 	command_bytes_array = bytearray(command_bytes)
 
 	for address_offset in address_table:
@@ -279,7 +277,7 @@ def convert_local_addresses_to_global(command_bytes, command_base_position, addr
 
 			local_address_as_int = struct.unpack('<I', local_address_byte_array)[0]
 
-			if USE_REMAP_REMORY:
+			if is_using_remapped_memory:
 				global_address_as_int = (local_address_as_int - 0xff413000) + 0x00028105 - 0x2100 + (address_offset-1) + command_base_position
 			else:
 				global_address_as_int = (local_address_as_int - 0xff813000) + 0x00028105 - 0x2100 + (address_offset-1) + command_base_position
@@ -294,7 +292,11 @@ def convert_local_addresses_to_global(command_bytes, command_base_position, addr
 			command_bytes_array[address_offset:address_offset+4] = bytearray(global_address_byte_array)
 	return bytes(command_bytes_array)
 
-def scan_for_possible_commands(f, opcode_list, command_position):
+def get_hex_string(buffer):
+    hex_string = ''.join(f'\\x{byte:02x}' for byte in buffer)
+    return hex_string
+
+def scan_for_possible_commands(f, opcode_list, command_position, is_using_remapped_memory):
 	possible_commands = []
 
 	for opcode in opcode_list:
@@ -308,7 +310,7 @@ def scan_for_possible_commands(f, opcode_list, command_position):
 		total_length = opcode["total_length"]
 
 		original_data_buffer = f.read(total_length)
-		addressed_fixed_data_buffer = convert_local_addresses_to_global(original_data_buffer, command_position - FLIPEFFECT_TABLE_ADDRESS, opcode["address_table"])
+		addressed_fixed_data_buffer = convert_local_addresses_to_global(original_data_buffer, command_position - FLIPEFFECT_TABLE_ADDRESS, opcode["address_table"], is_using_remapped_memory)
 
 		if byte_arrays[0] == addressed_fixed_data_buffer[0:len(byte_arrays[0])]:
 			if len(byte_arrays) > 1:
@@ -331,10 +333,14 @@ def scan_for_possible_commands(f, opcode_list, command_position):
 					possible_commands.append({"opcode":opcode, "first_arg":first_arg, "second_arg":second_arg})
 			else:
 				possible_commands.append({"opcode":opcode, "first_arg":first_arg, "second_arg":second_arg})
+
+	if len(possible_commands) == 0:
+		print("Could not find any commands for buffer: " + get_hex_string(original_data_buffer))
+
 	return possible_commands
 
-def scan_for_optimal_command(f, opcode_list, command_position):
-	possible_commands = scan_for_possible_commands(f, opcode_list, command_position)
+def scan_for_optimal_command(f, opcode_list, command_position, is_using_remapped_memory):
+	possible_commands = scan_for_possible_commands(f, opcode_list, command_position, is_using_remapped_memory)
 	
 	if len(possible_commands):
 		final_command_list = sorted(possible_commands, key=lambda x: (-len(x['opcode']['byte_arrays']), x['opcode']['total_length']))
@@ -392,7 +398,7 @@ def extract_racetimer_events_from_exe(f, opcode_list, is_using_remapped_memory):
 
 				f.seek(pos)
 				
-				command_result = scan_for_optimal_command(f, opcode_list, pos)
+				command_result = scan_for_optimal_command(f, opcode_list, pos, is_using_remapped_memory)
 				if (command_result["was_nop"]):
 					nop_count += 1
 				else:
@@ -450,7 +456,7 @@ def extract_flipeffect_table_from_exe(f, opcode_list, is_using_remapped_memory):
 					if (command_position - FLIPEFFECT_DATA_ADDRESS) >= offset_table[i+1]:
 						break
 
-				command_result = scan_for_optimal_command(f, opcode_list, command_position)
+				command_result = scan_for_optimal_command(f, opcode_list, command_position, is_using_remapped_memory)
 				if (command_result["was_nop"]):
 					nop_count += 1
 				else:
@@ -478,6 +484,25 @@ def extract_flipeffect_table_from_exe(f, opcode_list, is_using_remapped_memory):
 	
 	return flipeffect_table
 				
+def postprocess_furr_data(furr_data):
+	"""
+	Update the opcode names in the furr_data according to the specified rules.
+	"""
+	for trigger in furr_data:
+		for i, opcode in enumerate(trigger):
+			if opcode[0] == "CHANGE_POSITION_X":
+				trigger[i] = ["CHANGE_POSITION_Z", opcode[1], opcode[2]]
+			elif opcode[0] == "CHANGE_POSITION_Z":
+				trigger[i] = ["CHANGE_POSITION_X", opcode[1], opcode[2]]
+			elif opcode[0] == "MOVE_ITEM_X":
+				trigger[i] = ["MOVE_ITEM_Z", opcode[1], opcode[2]]
+			elif opcode[0] == "MOVE_ITEM_Z":
+				trigger[i] = ["MOVE_ITEM_X", opcode[1], opcode[2]]
+			elif opcode[0] == "ADD_POSITION":
+				trigger[i] = ["ADD_POSITION", opcode[2], opcode[1]]
+
+	return furr_data
+
 def read_exe_file(exe_file_path, is_using_remapped_memory):
 	opcodes = load_syntax_file()
 	
@@ -495,5 +520,7 @@ def read_exe_file(exe_file_path, is_using_remapped_memory):
 	with open(exe_file_path, 'rb') as f:
 		ret_val["furr_flipeffects"] = extract_flipeffect_table_from_exe(f, opcodes, is_using_remapped_memory)
 		ret_val["furr_racetimer_events"] = extract_racetimer_events_from_exe(f, opcodes, is_using_remapped_memory)
+
+	ret_val["furr_flipeffect"] = postprocess_furr_data(ret_val["furr_flipeffects"])
 
 	return ret_val

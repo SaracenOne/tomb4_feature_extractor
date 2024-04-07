@@ -219,14 +219,19 @@ def detect_tomb4_game(path=None, exe_file=None):
 	print("Searching for effects.bin...")
 	has_effects_bin = detect_effects_bin(path)
 
-	print("Scanning for TREP modifications in exe file...")
-	patch_data = trle_patch_binary.read_binary_file(exe_path, is_extended_exe_size, is_using_remapped_memory, False)
-
 	patches_path = os.path.join(path, "patches.bin")
 	print(f"Searching for {patches_path}...")
 	if os.path.exists(patches_path):
 		print(f"Found FLEP patches file at {patches_path}.")
-		patch_data = trle_patch_binary.read_binary_file(patches_path, True, False, True)
+		patch_data = trle_patch_binary.read_binary_file(patches_path, True, False, trle_patch_binary.PatchBinaryType.FLEP_EXTERNAL_BINARY)
+	else:
+		print("External patch binary not found...")
+		if exe_file_size == EXE_TREP_EXTENDED_SIZE or exe_file_size == EXE_DEFAULT_SIZE:
+			print("Scanning for TREP modifications in exe file...")
+			patch_data = trle_patch_binary.read_binary_file(exe_path, is_extended_exe_size, is_using_remapped_memory, trle_patch_binary.PatchBinaryType.TREP_EXE)
+		else:
+			print("Scanning for FLEP modifications in exe file...")
+			patch_data = trle_patch_binary.read_binary_file(exe_path, is_extended_exe_size, is_using_remapped_memory, trle_patch_binary.PatchBinaryType.FLEP_EXE)
 
 	audio_info = patch_data["audio_info"]
 	bars_info = patch_data["bars_info"]
@@ -283,7 +288,8 @@ def detect_tomb4_game(path=None, exe_file=None):
 	global_info["trng_version_build"] = 0
 	global_info["trng_version_is_plus"] = 0
 
-	global_info["furr_data"] = furr_data
+	if furr_data:
+		global_info["furr_data"] = furr_data
 
 	if exe_file_size != EXE_DEFAULT_SIZE and exe_file_size != EXE_TREP_EXTENDED_SIZE:
 		if trng_version and len(trng_version) == 4:
