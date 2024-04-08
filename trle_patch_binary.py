@@ -147,12 +147,22 @@ def read_font_info(f, patch_type):
 
 	return font_info
 
+def read_creature_info(f, patch_type):
+	print("Scanning Creature Info...")
+
+	creature_info = {}
+
+	if binary_funcs.is_nop_at_range(f, 0x0003F1F3, 0x0003F1F4):
+		print(f"Disabled Sentry Flame Attack")
+		creature_info["disable_sentry_flame_attack"] = True
+
+	return creature_info
+
 def read_misc_info(f, patch_type):
 	print("Scanning Misc Info...")
 
 	misc_info = {}
 
-	# Font Customizer
 	text_or_critical_bar_blink_interval = binary_funcs.get_u8_at_address(f, 0x000521B0)
 	if text_or_critical_bar_blink_interval != 5:
 		misc_info["text_or_critical_bar_blink_interval"] = text_or_critical_bar_blink_interval
@@ -163,7 +173,7 @@ def read_misc_info(f, patch_type):
 
 	if patch_type == PatchBinaryType.TREP_EXE:
 		# Remove Look Transparency
-		look_transparency_byte = binary_funcs.get_u8_at_address(f, 0x0001d0c0)
+		look_transparency_byte = binary_funcs.get_u8_at_address(f, 0x0001D0C0)
 		remove_look_transparency = True if look_transparency_byte == 0xeb else False
 		if remove_look_transparency:
 			print(f"Look Transparency Disabled: {str(remove_look_transparency)}.")
@@ -173,8 +183,8 @@ def read_misc_info(f, patch_type):
 			misc_info["lara_impales_on_spikes"] = True
 
 		# Static Shatter Range
-		lower_static_shatter_threshold = binary_funcs.get_u16_at_address(f, 0x0004d013)
-		upper_static_shatter_threshold = binary_funcs.get_u16_at_address(f, 0x0004d019)
+		lower_static_shatter_threshold = binary_funcs.get_u16_at_address(f, 0x0004D013)
+		upper_static_shatter_threshold = binary_funcs.get_u16_at_address(f, 0x0004D019)
 		if lower_static_shatter_threshold != 50 or upper_static_shatter_threshold != 58:
 			print(f"Static Shatter Range: {str(lower_static_shatter_threshold)}-{str(upper_static_shatter_threshold)}.")
 
@@ -857,6 +867,8 @@ def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memo
 		patch_data["lara_info"] = read_lara_info(f, patch_type)
 		print("---")
 		patch_data["stat_info"] = read_stat_info(f, patch_type)
+		print("---")
+		patch_data["creature_info"] = read_creature_info(f, patch_type)
 		print("---")
 		patch_data["misc_info"] = read_misc_info(f, patch_type)
 		print("---")
