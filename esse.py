@@ -319,23 +319,43 @@ def read_binary_file(file_path, patch_data):
             hor_mirror_offset = 2384
             for i in range(1, 20+1):
                 data = read_data(f, data, 'HorMirror' + str(i).zfill(2), base_offset, hor_mirror_offset, level_block_size, "BYTE", 0, 255)
-                data = read_data(f, data, 'HorMirror' + str(i).zfill(2) + 'Room', base_offset, hor_mirror_offset + 1, level_block_size, "DWORD", 0, 0)
-                hor_mirror_offset += 5
+                hor_mirror_offset += 1
+                data = read_data(f, data, 'HorMirror' + str(i).zfill(2) + 'Room', base_offset, hor_mirror_offset, level_block_size, "DWORD", 0, 0)
+                hor_mirror_offset += 4
 
             # Vertical Mirrors
             vert_mirror_offset = 2484
             for i in range(1, 50+1):
                 data = read_data(f, data, 'VertMirror' + str(i).zfill(2), base_offset, vert_mirror_offset, level_block_size, "BYTE", 0, 255)
-                data = read_data(f, data, 'VertMirror' + str(i).zfill(2) + 'Room', base_offset, vert_mirror_offset + 1, level_block_size, "DWORD", 0, 0)
-                vert_mirror_offset += 5
-                
+                vert_mirror_offset += 2
+                data = read_data(f, data, 'VertMirror' + str(i).zfill(2) + 'Room', base_offset, vert_mirror_offset, level_block_size, "DWORD", 0, 0)
+                vert_mirror_offset += 4
 
             level_info = {}
-
+            gfx_info = {}
+            
             if patch_data["meta_info"]["esse_scripted_params"] == True:
                 environment_info = {}
                 objects_info = {}
 
+                # Darts
+                if int(data["DartsInterval"] != 24):
+                    objects_info["darts_interval"] = int(data["DartsInterval"])
+                
+                if int(data["DartsSpeed"] != 256):
+                    objects_info["darts_speed"] = int(data["DartsSpeed"])
+
+                if int(data["DartsRGB"] != "#783c14"):
+                    print("Darts color is not default.")
+
+                # Falling block
+                if int(data["FallingBlockTimeout"] != 60):
+                    objects_info["falling_block_timer"] = int(data["FallingBlockTimeout"])
+                
+                if int(data["FallingBlockTremble"] != 1023):
+                    objects_info["falling_block_tremble"] = int(data["FallingBlockTremble"])
+
+                # Object customization
                 objects_info["object_customization"] = []
                 for j in range(0, data_tables.T4PLUS_OBJECT_COUNT):
                     object_customization = {}
@@ -353,6 +373,25 @@ def read_binary_file(file_path, patch_data):
 
                 level_info["environment_info"] = environment_info
                 level_info["objects_info"] = objects_info
+
+            if patch_data["meta_info"]["esse_multiple_mirrors"] == True:
+                mirror_customization = []
+                # Horizontal Mirrors
+                for i in range(1, 20+1):
+                    room_number = data['HorMirror' + str(i).zfill(2)]
+                    plane_position = data['HorMirror' + str(i).zfill(2) + 'Room']
+                    if room_number != 255:
+                        mirror_customization.append({"room_number":room_number, "plane_position":plane_position, "plane_direction":"z"})
+
+                # Vertical Mirrors
+                for i in range(1, 50+1):
+                    room_number = data['VertMirror' + str(i).zfill(2)]
+                    plane_position = data['VertMirror' + str(i).zfill(2) + 'Room']
+                    if room_number != 255:
+                        mirror_customization.append({"room_number":room_number, "plane_position":plane_position, "plane_direction":"y"})
+                gfx_info["mirror_customization"] = mirror_customization
+
+            level_info["gfx_info"] = gfx_info
 
             level_array.append(level_info)
 
