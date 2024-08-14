@@ -804,7 +804,7 @@ def read_lara_info(f, patch_type):
 
 	return lara_info
 
-def read_extended_info(f, is_extended_exe_size, patch_data, patch_type):
+def read_extended_info(f, is_extended_exe_size, is_using_remapped_memory, patch_data, patch_type):
 	print("Scanning Extended Info...")
 	
 	patch_data["meta_info"]["esse_scripted_params"] = False
@@ -820,13 +820,28 @@ def read_extended_info(f, is_extended_exe_size, patch_data, patch_type):
 				patch_data["meta_info"]["furr_support"] = True
 				
 			# eSSe file loading enable
-			if not binary_funcs.is_nop_at_range(f, 0x000EFBA0, 0x000EFBC8) or \
-			not binary_funcs.is_nop_at_range(f, 0x000EFFE0, 0x000F0002):
+			patch_data["meta_info"]["esse_file_loading"] = not binary_funcs.is_nop_at_range(f, 0x000EFBA0, 0x000EFBC8) or \
+			not binary_funcs.is_nop_at_range(f, 0x000EFFE0, 0x000F0002)
+
+			if patch_data["meta_info"]["esse_file_loading"]:
 				print(f"eSSe file loading enabled!")
 				if not binary_funcs.is_nop_at_range(f, 0x000F0010, 0x000F0A3D):
 					patch_data["meta_info"]["esse_scripted_params"] = True
 				if not binary_funcs.is_nop_at_range(f, 0x000F5E10, 0x000F6113):
 					patch_data["meta_info"]["esse_multiple_mirrors"] = True
+
+			if patch_data["meta_info"]["esse_file_loading"] and is_using_remapped_memory:
+				# Cold breath
+				if not binary_funcs.is_nop_at_range(f, 0x000F6550, 0x000F66B8):
+					patch_data["gfx_info"]["cold_breath"] = "enabled_in_cold_rooms_only"
+					patch_data["environment_info"]["room_cold_flag"] = 0x1000
+					cold_breath_animation_103_start_frame = binary_funcs.get_u32_at_address(f, 0x000F6639)
+					cold_breath_animation_110_start_frame = binary_funcs.get_u32_at_address(f, 0x000F6645)
+					cold_breath_animation_222_start_frame = binary_funcs.get_u32_at_address(f, 0x000F6653)
+					cold_breath_animation_263_start_frame = binary_funcs.get_u32_at_address(f, 0x000F6661)
+					cold_breath_general_cycle_length = binary_funcs.get_u32_at_address(f, 0x000F668F)
+					cold_breath_general_cycle_start_frame = binary_funcs.get_u32_at_address(f, 0x000F66A0)
+					cold_breath_bypass_103_animation_sync = binary_funcs.get_u8_at_address(f, 0x000F663E) == 0x35
 
 		# Draw Legend on Flybys
 		if not binary_funcs.is_nop_at_range(f, 0x000EF7C0, 0x000EF7F3):
@@ -936,7 +951,7 @@ def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memo
 		print("---")
 		patch_data["misc_info"] = read_misc_info(f, patch_type)
 		print("---")
-		patch_data = read_extended_info(f, is_extended_exe_size, patch_data, patch_type)
+		patch_data = read_extended_info(f, is_extended_exe_size, is_using_remapped_memory, patch_data, patch_type)
 		print("---")
 
 	return patch_data

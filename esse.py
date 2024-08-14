@@ -327,12 +327,21 @@ def read_binary_file(file_path, patch_data):
             vert_mirror_offset = 2484
             for i in range(1, 50+1):
                 data = read_data(f, data, 'VertMirror' + str(i).zfill(2), base_offset, vert_mirror_offset, level_block_size, "BYTE", 0, 255)
-                vert_mirror_offset += 2
+                vert_mirror_offset += 1
+                data = read_data(f, data, 'VertMirror' + str(i).zfill(2) + 'Lim', base_offset, vert_mirror_offset, level_block_size, "BOOL", 0, False)
+                vert_mirror_offset += 1
                 data = read_data(f, data, 'VertMirror' + str(i).zfill(2) + 'Room', base_offset, vert_mirror_offset, level_block_size, "DWORD", 0, 0)
                 vert_mirror_offset += 4
 
+            data = read_data(f, data, 'ColdBreath', base_offset, 2784, level_block_size, "BOOL", 0, True)
+            data = read_data(f, data, 'SlowStartupFade', base_offset, 2785, level_block_size, "BOOL", 0, False)
+            data = read_data(f, data, 'DisableSave', base_offset, 2790, level_block_size, "BOOL", 0, False)
+
             level_info = {}
             gfx_info = {}
+
+            if data['ColdBreath']:
+                gfx_info["cold_breath"] = "enabled_outside_and_in_cold_rooms"
             
             if patch_data["meta_info"]["esse_scripted_params"] == True:
                 environment_info = {}

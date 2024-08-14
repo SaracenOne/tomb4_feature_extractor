@@ -249,20 +249,21 @@ def detect_tomb4_game(path=None, exe_file=None):
 	print("Scanning for Leikkuri modifications in exe file...")
 	font_info = leikkuri.read_exe_file(exe_path, font_info)
 
-	esse_path = os.path.join(path, "script2.dat")
 	esse_result = []
-	print(f"Searching for {esse_path}...")
-	if os.path.exists(esse_path):
-		print(f"Found eSSe script file at {esse_path}.")
-		esse_result = esse.read_binary_file(esse_path, patch_data)
+	if meta_info["esse_file_loading"] == True:
+		esse_path = os.path.join(path, "script2.dat")
+		print(f"Searching for {esse_path}...")
+		if os.path.exists(esse_path):
+			print(f"Found eSSe script file at {esse_path}.")
+			esse_result = esse.read_binary_file(esse_path, patch_data)
 
-		print("eSSe script file content:")
-		level_id = 0
-		for item in esse_result:
-			print(f"eSSe data for level {str(level_id)}: {str(item)}")
-			level_id += 1
-	else:
-		print(f"No eSSe script file found.")
+			print("eSSe script file content:")
+			level_id = 0
+			for item in esse_result:
+				print(f"eSSe data for level {str(level_id)}: {str(item)}")
+				level_id += 1
+		else:
+			print(f"No eSSe script file found.")
 
 	furr_data = {}
 
