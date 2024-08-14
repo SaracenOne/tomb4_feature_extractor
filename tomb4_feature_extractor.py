@@ -239,6 +239,7 @@ def detect_tomb4_game(path=None, exe_file=None):
 	gfx_info = patch_data["gfx_info"]
 	environment_info = patch_data["environment_info"]
 	creature_info = patch_data["creature_info"]
+	camera_info = patch_data["camera_info"]
 	misc_info = patch_data["misc_info"]
 	stat_info = patch_data["stat_info"]
 	meta_info = patch_data["meta_info"]
@@ -327,6 +328,8 @@ def detect_tomb4_game(path=None, exe_file=None):
 		global_level_info["environment_info"] = environment_info
 	if bool(creature_info):
 		global_level_info["creature_info"] = creature_info
+	if bool(camera_info):
+		global_level_info["camera_info"] = camera_info
 	if bool(misc_info):
 		global_level_info["misc_info"] = misc_info
 	if bool(stat_info):

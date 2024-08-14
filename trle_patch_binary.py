@@ -60,6 +60,37 @@ def read_objects_info(f, patch_type):
 				object_customization[106]["hit_points"] = enemy_health
 
 	if patch_type == PatchBinaryType.TREP_EXE:
+		# Darts
+		darts_interval = binary_funcs.get_s16_at_address(f, 0x00013E69)
+		if darts_interval != 24:
+			print("Darts interval: {darts_interval}".format(darts_interval=darts_interval))
+			objects_info["darts_interval"] = darts_interval
+
+		darts_speed = binary_funcs.get_s16_at_address(f, 0x00013F3E)
+		if darts_speed != 256:
+			print("Darts speed: {darts_speed}".format(darts_speed=darts_speed))
+			objects_info["darts_speed"] = darts_speed
+
+		darts_color = binary_funcs.get_bgr_color_at_address(f, 0x0008B121)
+		if darts_color['r'] != 120 or darts_color['g'] != 60 or darts_color['b'] != 20:
+			objects_info["darts_speed"] = darts_color
+
+		# Falling block
+		falling_block_timer = binary_funcs.get_s16_at_address(f, 0x00013A9F)
+		if falling_block_timer != 60:
+			print("Falling block timer: {falling_block_timer}".format(falling_block_timer=falling_block_timer))
+			objects_info["falling_block_timer"] = falling_block_timer
+			
+		falling_block_tremble_1 = binary_funcs.get_s16_at_address(f, 0x00013AEF)
+		falling_block_tremble_2 = binary_funcs.get_s16_at_address(f, 0x00013B02)
+		if falling_block_tremble_1 != falling_block_tremble_2:
+			print("Falling block tremble mismatch!")
+		
+		if falling_block_tremble_1 != 1023:
+			print("Falling block tremble: {falling_block_tremble}".format(falling_block_tremble=falling_block_tremble_1))
+			objects_info["falling_block_tremble"] = falling_block_tremble_1
+
+
 		for row in data_tables.enemy_damage_table:
 			f.seek(row["address"])
 			damage_name = row["name"]
@@ -157,6 +188,37 @@ def read_creature_info(f, patch_type):
 		creature_info["disable_sentry_flame_attack"] = True
 
 	return creature_info
+
+def read_camera_info(f, patch_type):
+	print("Scanning Camera Info...")
+
+	camera_info = {}
+
+	if patch_type == PatchBinaryType.TREP_EXE:
+		chase_camera_vertical_orientation = binary_funcs.get_s16_at_address(f, 0x00042DB9)
+		if chase_camera_vertical_orientation != -1820:
+			camera_info["chase_camera_vertical_orientation"] = chase_camera_vertical_orientation
+
+		look_camera_distance = binary_funcs.get_s16_at_address(f, 0x0004387C)
+		if look_camera_distance != -1024:
+			camera_info["look_camera_distance"] = look_camera_distance
+
+		add_on_battle_camera_top = binary_funcs.get_s16_at_address(f, 0x000444C5)
+		if add_on_battle_camera_top != 256:
+			camera_info["add_on_battle_camera_top"] = add_on_battle_camera_top
+
+		camera_speed = binary_funcs.get_s16_at_address(f, 0x00044574)
+		if camera_speed != 10:
+			camera_info["camera_speed"] = camera_speed
+
+		normal_camera_distance = binary_funcs.get_s16_at_address(f, 0x0004459C)
+		if normal_camera_distance != 1536:
+			camera_info["normal_camera_distance"] = normal_camera_distance
+
+		if binary_funcs.get_s8_at_address(f, 0x0002D6FE) == 0x00 and binary_funcs.get_s8_at_address(f, 0x0002D729) == 0x00 and binary_funcs.get_s8_at_address(f, 0x0002D7EE):
+			print(f"Unify normal and battle camera: True")
+
+	return camera_info
 
 def read_misc_info(f, patch_type):
 	print("Scanning Misc Info...")
@@ -869,6 +931,8 @@ def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memo
 		patch_data["stat_info"] = read_stat_info(f, patch_type)
 		print("---")
 		patch_data["creature_info"] = read_creature_info(f, patch_type)
+		print("---")
+		patch_data["camera_info"] = read_camera_info(f, patch_type)
 		print("---")
 		patch_data["misc_info"] = read_misc_info(f, patch_type)
 		print("---")
