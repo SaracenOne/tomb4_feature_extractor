@@ -1,7 +1,7 @@
 # Tomb4Plus - Feature Extractor
 ## A tool for generating Tomb4Plus-compatible manifest files
 
-This repository contains a companion tool for the [Tomb4Plus](https://github.com/saracenone/tomb4) engine designed to generate engine-compatible `game_mod_config.json` manifest files.
+This repository contains a companion tool for the [Tomb4Plus](https://github.com/saracenone/tomb4plus) engine designed to generate engine-compatible `game_mod_config.json` manifest files.
 
 Since custom levels often use direct engine binary patches, and there are 1000s of TRLE-based custom levels spanning decades, this tool attempts to extract known modifications from commonly-used binary patches and convert them into a format that Tomb4Plus can understand. Patches can then be submitted to [this](https://github.com/saracenone/tomb4_manifest_directory) repository.
 
