@@ -45,6 +45,15 @@ def read_s32(f) -> int:
 def read_u32(f) -> int:
 	return int.from_bytes(f.read(4), byteorder='little', signed=False)
 
+def read_cstring(f) -> str:
+    cstring = ""
+    while True:
+        id = read_u8(f)
+        if id == 0:
+            break
+        cstring += chr(id)
+    return cstring
+
 def skip_bytes(f, bytes):
 	f.seek(bytes, 1)
 

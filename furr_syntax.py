@@ -447,8 +447,6 @@ def extract_flipeffect_table_from_exe(f, opcode_list, is_using_remapped_memory):
 				# Indicates we've likely reached the end
 				if nop_count > MAX_NOPS:
 					break
-
-				possible_commands = []
 				
 				command_position = f.tell()
 
@@ -521,6 +519,6 @@ def read_exe_file(exe_file_path, is_using_remapped_memory):
 		ret_val["furr_flipeffects"] = extract_flipeffect_table_from_exe(f, opcodes, is_using_remapped_memory)
 		ret_val["furr_racetimer_events"] = extract_racetimer_events_from_exe(f, opcodes, is_using_remapped_memory)
 
-	ret_val["furr_flipeffect"] = postprocess_furr_data(ret_val["furr_flipeffects"])
+	ret_val["furr_flipeffects"] = postprocess_furr_data(ret_val["furr_flipeffects"])
 
 	return ret_val
