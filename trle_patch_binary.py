@@ -146,7 +146,7 @@ def read_font_info(f, patch_type):
 
 	main_font_main_color = binary_funcs.get_rgb_color_at_address(f, 0x000ADEF8)
 	if main_font_main_color['r'] != 128 or main_font_main_color['g'] != 128 or main_font_main_color['b'] != 128:
-		font_info["main_font_color"] = main_font_main_color
+		font_info["main_font_main_color"] = main_font_main_color
         
 	main_font_fade_color = binary_funcs.get_rgb_color_at_address(f, 0x000ADEFC)
 	if main_font_fade_color['r'] != 128 or main_font_fade_color['g'] != 128 or main_font_fade_color['b'] != 128:
@@ -170,11 +170,11 @@ def read_font_info(f, patch_type):
 
 	inventory_title_item_main_color = binary_funcs.get_rgb_color_at_address(f, 0x000ADF10)
 	if inventory_title_item_main_color['r'] != 128 or inventory_title_item_main_color['g'] != 128 or inventory_title_item_main_color['b'] != 128:
-		font_info["inventory_title_item_main_color"] = inventory_title_item_main_color
+		font_info["inventory_item_font_main_color"] = inventory_title_item_main_color
 
 	inventory_title_item_fade_color = binary_funcs.get_rgb_color_at_address(f, 0x000ADF14)
 	if inventory_title_item_fade_color['r'] != 16 or inventory_title_item_fade_color['g'] != 16 or inventory_title_item_fade_color['b'] != 16:
-		font_info["inventory_title_item_fade_color"] = inventory_title_item_fade_color
+		font_info["inventory_item_font_fade_color"] = inventory_title_item_fade_color
 
 	return font_info
 
@@ -807,6 +807,7 @@ def read_lara_info(f, patch_type):
 def read_extended_info(f, is_extended_exe_size, is_using_remapped_memory, patch_data, patch_type):
 	print("Scanning Extended Info...")
 	
+	patch_data["meta_info"]["esse_file_loading"] = False
 	patch_data["meta_info"]["esse_scripted_params"] = False
 	patch_data["meta_info"]["esse_multiple_mirrors"] = False
 
@@ -895,6 +896,13 @@ def read_extended_info(f, is_extended_exe_size, is_using_remapped_memory, patch_
 				patch_data["misc_info"]["enable_smashing_and_killing_rolling_balls"] = enable_rollingball_smash_and_kill
 			print(f"Enable Rollingball Smash and Kill: {str(enable_rollingball_smash_and_kill)}")
 
+			# Enable teeth spikes kill enemies
+			enable_teeth_spikes_kill_enemies = False
+			if not binary_funcs.is_nop_at_range(f, 0x000EF3F0, 0x000EF406):
+				enable_teeth_spikes_kill_enemies = True
+				patch_data["misc_info"]["enable_teeth_spikes_kill_enemies"] = enable_teeth_spikes_kill_enemies
+			print(f"Enable teeth spikes kill enemies: {str(enable_teeth_spikes_kill_enemies)}")
+
 			# Enable Standing Pushables
 			enable_standing_pushables = False
 			if not binary_funcs.is_nop_at_range(f, 0x000EE43F, 0x000EE9DE):
@@ -920,7 +928,71 @@ def read_extended_info(f, is_extended_exe_size, is_using_remapped_memory, patch_
 
 	return patch_data
 
-    
+def read_weapon_info(f, patch_type):
+	print("Scanning Weapon Info...")
+
+	weapon_info = {}
+	
+	if patch_type == PatchBinaryType.TREP_EXE:
+		pistol_damage = binary_funcs.get_u8_at_address(f, 0x000AB876)
+		if pistol_damage != 1:
+			weapon_info["pistol_damage"] = pistol_damage
+			
+		uzi_damage = binary_funcs.get_u8_at_address(f, 0x000AB8C2)
+		if uzi_damage != 1:
+			weapon_info["uzi_damage"] = uzi_damage
+
+		revolver_damage = binary_funcs.get_u8_at_address(f, 0x000AB89C)
+		if revolver_damage != 21:
+			weapon_info["revolver_damage"] = revolver_damage
+
+		pistol_rate = binary_funcs.get_u8_at_address(f, 0x000AB877)
+		if pistol_rate != 9:
+			weapon_info["pistol_rate"] = pistol_rate
+
+		uzi_rate = binary_funcs.get_u8_at_address(f, 0x000AB8C3)
+		if uzi_rate != 3:
+			weapon_info["uzi_rate"] = uzi_rate
+
+		revolver_rate = binary_funcs.get_u8_at_address(f, 0x000AB89D)
+		if revolver_rate != 16:
+			weapon_info["revolver_rate"] = revolver_rate
+
+		pistol_dispertion = binary_funcs.get_u8_at_address(f, 0x000AB871)
+		if pistol_dispertion != 5:
+			weapon_info["pistol_dispertion"] = pistol_dispertion
+
+		uzi_dispertion = binary_funcs.get_u8_at_address(f, 0x000AB8BD)
+		if uzi_dispertion != 5:
+			weapon_info["uzi_dispertion"] = uzi_dispertion
+
+		revolver_dispertion = binary_funcs.get_u8_at_address(f, 0x000AB897)
+		if revolver_dispertion != 2:
+			weapon_info["revolver_dispertion"] = revolver_dispertion
+
+		pistol_flash_duration = binary_funcs.get_u8_at_address(f, 0x000AB878)
+		if pistol_flash_duration != 3:
+			weapon_info["pistol_flash_duration"] = pistol_flash_duration
+
+		uzi_flash_duration = binary_funcs.get_u8_at_address(f, 0x000AB8C4)
+		if uzi_flash_duration != 3:
+			weapon_info["uzi_flash_duration"] = uzi_flash_duration
+
+		revolver_flash_duration = binary_funcs.get_u8_at_address(f, 0x000AB89E)
+		if revolver_flash_duration != 3:
+			weapon_info["revolver_flash_duration"] = revolver_flash_duration
+
+		shotgun_flash_duration = binary_funcs.get_u8_at_address(f, 0x000AB8EA)
+		if shotgun_flash_duration != 3:
+			weapon_info["shotgun_flash_duration"] = shotgun_flash_duration
+
+		crossbow_bolt_damage = binary_funcs.get_u8_at_address(f, 0x000AB934)
+		if crossbow_bolt_damage != 5:
+			weapon_info["crossbow_bolt_damage"] = crossbow_bolt_damage
+			
+	return weapon_info
+
+
 def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memory, patch_type):
 	patch_data = {}
 
@@ -950,6 +1022,8 @@ def read_binary_file(exe_file_path, is_extended_exe_size, is_using_remapped_memo
 		patch_data["camera_info"] = read_camera_info(f, patch_type)
 		print("---")
 		patch_data["misc_info"] = read_misc_info(f, patch_type)
+		print("---")
+		patch_data["weapon_info"] = read_weapon_info(f, patch_type)
 		print("---")
 		patch_data = read_extended_info(f, is_extended_exe_size, is_using_remapped_memory, patch_data, patch_type)
 		print("---")
